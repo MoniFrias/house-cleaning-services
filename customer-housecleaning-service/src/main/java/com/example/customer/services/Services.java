@@ -25,10 +25,10 @@ public class Services {
 	private Pattern pattern;
 	private Matcher matcher;
 	
-	private boolean validatePhoneNumber(Long phoneNumber) {
+	private boolean validatePhoneNumberAndEmail(Long phoneNumber, String email) {
 		pattern = Pattern.compile("[0-9]{10}");
 		matcher = pattern.matcher(Long.toString(phoneNumber));
-		if(matcher.matches()) {
+		if(matcher.matches() && email.contains(".com")) {
 			return true;
 		}else {
 			return false;
@@ -38,7 +38,7 @@ public class Services {
 	public Response save(@Valid Customer customer, BindingResult validResult) {
 		Response response = new Response();
 		Customer customerFound = repository.findCustomerByEmail(customer.getEmail());
-		boolean matcherPhoneNumber = validatePhoneNumber(customer.getPhoneNumber());
+		boolean matcherPhoneNumber = validatePhoneNumberAndEmail(customer.getPhoneNumber(), customer.getEmail());
 		if(matcherPhoneNumber && !validResult.hasErrors()) {
 			if (customerFound == null) {
 				response.setData(repository.save(customer));
@@ -96,7 +96,7 @@ public class Services {
 
 	public Response update(Customer customer, Long id, BindingResult validResult) {
 		Response response = new Response();
-		boolean matcherPhoneNumber = validatePhoneNumber(customer.getPhoneNumber());
+		boolean matcherPhoneNumber = validatePhoneNumberAndEmail(customer.getPhoneNumber(), customer.getEmail());
 		Customer customerFound = repository.findCustomerById(id);
 		if (id != null && id > 0) {
 			if (matcherPhoneNumber && !validResult.hasErrors()) {

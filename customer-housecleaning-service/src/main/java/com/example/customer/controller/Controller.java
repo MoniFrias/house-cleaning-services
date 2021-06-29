@@ -57,13 +57,13 @@ public class Controller {
 	@PutMapping(path = "/update/{id}")
 	public ResponseEntity<Response> update(@Valid @RequestBody Customer customer, @PathVariable Long id, BindingResult validResult){
 		Response response = services.update(customer, id, validResult);
-		return new ResponseEntity<>(response,HttpStatus.FOUND);
+		return new ResponseEntity<>(response,HttpStatus.OK);
 	}
 	
 	@DeleteMapping(path = "/deleteById")
 	public ResponseEntity<Response> deleteById(@RequestHeader(name = "id") Long id){
 		Response response = services.deleteById(id);
-		return new ResponseEntity<>(response,HttpStatus.FOUND);
+		return new ResponseEntity<>(response,HttpStatus.OK);
 	}
 	
 }
