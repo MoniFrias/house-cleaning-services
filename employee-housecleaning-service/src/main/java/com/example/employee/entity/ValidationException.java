@@ -1,9 +1,9 @@
 package com.example.employee.entity;
 
-public class ValidationException {
+public class ValidationException extends RuntimeException{
 
-	public ValidationException() {
-		// TODO Auto-generated constructor stub
+	public ValidationException(String message) {
+		super(message);
 	}
 
 }
