@@ -23,7 +23,7 @@ import com.example.services.services.Services;
 
 
 @RestController
-@RequestMapping(path = "/services")
+@RequestMapping(path = "/typeServices")
 public class Controller {
 	
 	@Autowired
@@ -41,9 +41,10 @@ public class Controller {
 		return new ResponseEntity<>(response,HttpStatus.FOUND);
 	}
 	
+	
 	@GetMapping(path = "/findByType")
-	public ResponseEntity<Response> findByCity(@RequestParam(name = "type") String type){
-		Response response = services.findByCity(type);
+	public ResponseEntity<Response> findByType(@RequestParam(name = "type") String type){
+		Response response = services.findByType(type);
 		return new ResponseEntity<>(response,HttpStatus.FOUND);
 	}
 		

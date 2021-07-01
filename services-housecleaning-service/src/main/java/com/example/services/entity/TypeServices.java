@@ -25,9 +25,13 @@ public class TypeServices {
 	@Pattern(regexp = "[a-zA-Z]{4,10}")
 	@Column(name = "type")
 	private String type;
+	
 	@NotNull
+	@Column(name = "cost")
 	private Long cost;
+	
 	@NotNull
+	@Column(name = "suggestedTime")
 	private Long suggestedTime;
 
 

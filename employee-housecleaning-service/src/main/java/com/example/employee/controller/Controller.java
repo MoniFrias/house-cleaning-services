@@ -46,7 +46,7 @@ public class Controller {
 		return new ResponseEntity<>(response,HttpStatus.FOUND);
 	}
 	
-	@GetMapping(path = "/findByEmail")
+	@GetMapping(path = "/findByAppointment")
 	public ResponseEntity<Response> findByAppointment(@RequestParam(name = "appointment") String appointment){
 		Response response = services.findByAppointment(appointment);
 		return new ResponseEntity<>(response,HttpStatus.FOUND);
