@@ -18,4 +18,8 @@ public interface RepositoryCustomers extends JpaRepository<Customer, Long>{
 
 	void deleteCustomerById(Long id);
 
+	List<Customer> findCustomerByState(String state);
+
+	List<Customer> findCustomerByPostalCode(String code);
+
 }

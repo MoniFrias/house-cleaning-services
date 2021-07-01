@@ -72,6 +72,28 @@ public class Services {
 			throw new ValidationException("Is empty");
 		}	
 	}
+	
+	public Response findByState(String state) {
+		Response response = new Response();
+		List<Customer> listCustomer = repository.findCustomerByState(state);
+		if (!listCustomer.isEmpty()) {
+			response.setData(listCustomer);
+			return response;
+		}else {
+			throw new ValidationException("There aren't Customers in that State");
+		}	
+	}
+	
+	public Response findByPostalCode(String code) {
+		Response response = new Response();
+		List<Customer> listCustomer = repository.findCustomerByPostalCode(code);
+		if (!listCustomer.isEmpty()) {
+			response.setData(listCustomer);
+			return response;
+		}else {
+			throw new ValidationException("There aren't Customers in that Postal code");
+		}	
+	}
 
 	public Response findByEmail(String email) {
 		Response response = new Response();

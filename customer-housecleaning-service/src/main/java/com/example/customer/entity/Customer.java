@@ -37,7 +37,18 @@ public class Customer {
 	@NotNull
 	@Pattern(regexp = "[a-zA-Z]{4,30}")
 	@Column(name = "city")
-	private String city;
+	private String city;	
+
+	@NotNull
+	@Pattern(regexp = "[A-Z]{2,3}")
+	@Column(name = "state")
+	private String state;
+	
+	@NotNull
+	@Pattern(regexp = "[0-9]{5}")
+	@Column(name = "postalCode")
+	private String postalCode;
+	
 	@NotNull
 	@Pattern(regexp = "[a-zA-Z0-9]{5,50}")
 	@Column(name = "address")
