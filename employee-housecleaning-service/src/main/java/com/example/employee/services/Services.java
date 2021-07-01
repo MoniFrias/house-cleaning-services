@@ -35,8 +35,7 @@ public class Services {
 			return true;
 		}else {
 			return false;
-		}
-		
+		}		
 	}
 
 	public Response save(Employee employee, BindingResult validResult) {
@@ -76,10 +75,27 @@ public class Services {
 			throw new ValidationException("Is empty");
 		}
 	}
-
-	public Response findByAppointment(String appointment) {
-		// TODO Auto-generated method stub
-		return null;
+	
+	public Response findByState(String state) {
+		Response response = new Response();
+		List<Employee> listEmployee = repository.findEmployeeByState(state);
+		if (!listEmployee.isEmpty()) {
+			response.setData(listEmployee);
+			return response;
+		}else {
+			throw new ValidationException("There aren't Customers in that State");
+		}	
+	}
+	
+	public Response findByPostalCode(String code) {
+		Response response = new Response();
+		List<Employee> listEmployee = repository.findEmployeeByPostalCode(code);
+		if (!listEmployee.isEmpty()) {
+			response.setData(listEmployee);
+			return response;
+		}else {
+			throw new ValidationException("There aren't Customers in that Postal code");
+		}	
 	}
 	
 	private Employee updateEmployee(Employee employee, Employee employeeFound) {

@@ -54,6 +54,16 @@ public class Employee {
 	private String city;
 	
 	@NotNull
+	@Pattern(regexp = "[A-Z]{2,3}")
+	@Column(name = "state")
+	private String state;
+	
+	@NotNull
+	@Pattern(regexp = "[0-9]{5}")
+	@Column(name = "postalCode")
+	private String postalCode;
+	
+	@NotNull
 	@Column(name = "phoneNumber")
 	private Long phoneNumber;
 

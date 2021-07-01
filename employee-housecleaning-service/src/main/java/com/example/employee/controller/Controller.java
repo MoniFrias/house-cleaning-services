@@ -46,11 +46,18 @@ public class Controller {
 		return new ResponseEntity<>(response,HttpStatus.FOUND);
 	}
 	
-	@GetMapping(path = "/findByAppointment")
-	public ResponseEntity<Response> findByAppointment(@RequestParam(name = "appointment") String appointment){
-		Response response = services.findByAppointment(appointment);
+	@GetMapping(path = "/findByState")
+	public ResponseEntity<Response> findByState(@RequestParam(name = "state") String state){
+		Response response = services.findByState(state);
 		return new ResponseEntity<>(response,HttpStatus.FOUND);
 	}
+	
+	@GetMapping(path = "/findByPostalCode")
+	public ResponseEntity<Response> findByPostalCode(@RequestParam(name = "code") String code){
+		Response response = services.findByPostalCode(code);
+		return new ResponseEntity<>(response,HttpStatus.FOUND);
+	}
+	
 	
 	@PutMapping(path = "/update/{id}")
 	public ResponseEntity<Response> update(@Valid @RequestBody Employee employee, @PathVariable Long id, BindingResult validResult){
