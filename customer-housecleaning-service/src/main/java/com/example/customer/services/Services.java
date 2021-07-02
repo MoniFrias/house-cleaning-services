@@ -1,6 +1,8 @@
 package com.example.customer.services;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -149,5 +151,16 @@ public class Services {
 		}else {
 			throw new ValidationException("Id can't be null or zero");
 		}
+	}
+
+	public Response findByState2(String state) {
+		Response response = new Response();
+		List<String> listCustomer =  repository.findCustomerByStates(state);
+		if (!listCustomer.isEmpty()) {
+			response.setData(listCustomer);
+			return response;
+		}else {
+			throw new ValidationException("There aren't Customers in that State");
+		}	
 	}
 }

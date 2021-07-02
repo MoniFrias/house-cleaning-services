@@ -26,14 +26,17 @@ public class Customer {
 	@Pattern(regexp = "[a-zA-Z]{4,10}")
 	@Column(name = "name")
 	private String name;
+	
 	@NotNull
 	@Pattern(regexp = "[a-zA-Z]{4,10}")
 	@Column(name = "lastName")
 	private String lastName;
+	
 	@NotNull
 	@Email
 	@Column(name = "email")
 	private String email;
+	
 	@NotNull
 	@Pattern(regexp = "[a-zA-Z]{4,30}")
 	@Column(name = "city")

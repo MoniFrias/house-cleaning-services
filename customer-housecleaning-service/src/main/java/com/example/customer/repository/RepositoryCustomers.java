@@ -1,8 +1,12 @@
 package com.example.customer.repository;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.example.customer.entity.Customer;
@@ -21,5 +25,11 @@ public interface RepositoryCustomers extends JpaRepository<Customer, Long>{
 	List<Customer> findCustomerByState(String state);
 
 	List<Customer> findCustomerByPostalCode(String code);
+
+	@Query("SELECT c.name, c.lastName, c.state FROM Customer c WHERE c.state = ?1")
+	List<String> findCustomerByStates(String state);
+	
+	
+	
 
 }
