@@ -1,6 +1,5 @@
 package com.example.customer.repository;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
@@ -25,10 +24,9 @@ public interface RepositoryCustomers extends JpaRepository<Customer, Long>{
 	List<Customer> findCustomerByState(String state);
 
 	List<Customer> findCustomerByPostalCode(String code);
-
-	@Query("SELECT c.name, c.lastName, c.state FROM Customer c WHERE c.state = ?1")
-	List<String> findCustomerByStates(String state);
 	
+	@Query(nativeQuery = true, value = "SELECT id,name,state FROM Customer WHERE state =:state")
+	List<Object> findCustomerByStates(String state);
 	
 	
 

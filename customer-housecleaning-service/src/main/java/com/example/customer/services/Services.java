@@ -16,6 +16,8 @@ import com.example.customer.entity.Customer;
 import com.example.customer.entity.Response;
 import com.example.customer.entity.ValidationException;
 import com.example.customer.repository.RepositoryCustomers;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 
 @Service
@@ -152,11 +154,12 @@ public class Services {
 			throw new ValidationException("Id can't be null or zero");
 		}
 	}
+	
 
 	public Response findByState2(String state) {
 		Response response = new Response();
-		List<String> listCustomer =  repository.findCustomerByStates(state);
-		if (!listCustomer.isEmpty()) {
+		List<Object> listCustomer =  repository.findCustomerByStates(state);		
+		if (listCustomer != null) {
 			response.setData(listCustomer);
 			return response;
 		}else {
