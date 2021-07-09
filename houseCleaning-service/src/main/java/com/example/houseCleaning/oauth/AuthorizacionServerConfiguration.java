@@ -28,15 +28,6 @@ public class AuthorizacionServerConfiguration extends AuthorizationServerConfigu
 	@Autowired
 	private TokenStore tokenStore;
 
-
-	
-//	@Override
-//	public void configure(AuthorizationServerSecurityConfigurer security) throws Exception {
-//		security.passwordEncoder(NoOpPasswordEncoder.getInstance())
-//		.checkTokenAccess("permitAll()")
-//		.tokenKeyAccess("permitAll()");
-//	}
-
 	@Override
 	public void configure(ClientDetailsServiceConfigurer clients) throws Exception {
 		clients.inMemory()

@@ -14,12 +14,12 @@ public class ResourceServerConfiguration extends ResourceServerConfigurerAdapter
 	public void configure(HttpSecurity http) throws Exception {
 		http
 		.authorizeRequests().antMatchers("/oauth/token", "/oauth/authorize**", "/publica").permitAll();  
-//		 .anyRequest().authenticated(); 
-
-		http.requestMatchers().antMatchers("/privada")  //  Denegamos el acceso a "/privada"
+		
+		http.requestMatchers().antMatchers("/privada")  
 		.and().authorizeRequests()
 		.antMatchers("/privada").access("hasRole('USER')") 
-		.and().requestMatchers().antMatchers("/admin") // Denegamos el acceso a "/admin"
+		
+		.and().requestMatchers().antMatchers("/admin") 
 		.and().authorizeRequests()
 		.antMatchers("/admin").access("hasRole('ADMIN')");
 	}
