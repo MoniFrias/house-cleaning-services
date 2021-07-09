@@ -1,4 +1,4 @@
-package com.example.houseCleaning.oauth;
+package com.example.houseCleaning.controller;
 
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.oauth2.config.annotation.web.configuration.EnableResourceServer;
@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @EnableResourceServer
 @RestController
-public class ResourceServerConfiguration extends ResourceServerConfigurerAdapter{
+public class Controller extends ResourceServerConfigurerAdapter{
 
 	@Override
 	public void configure(HttpSecurity http) throws Exception {
@@ -37,6 +37,5 @@ public class ResourceServerConfiguration extends ResourceServerConfigurerAdapter
 	  public String admin() {
 		    return "Pagina Administrador";
 	  }
-	
 
 }
