@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.houseCleaning.entity.Customer;
+import com.example.houseCleaning.entity.Employee;
 import com.example.houseCleaning.entity.Response;
 import com.example.houseCleaning.services.Services;
 
@@ -45,11 +46,11 @@ public class Controller extends ResourceServerConfigurerAdapter{
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 	
-//	@PostMapping(path = "/createAccountCustomer")
-//	public ResponseEntity<Response> createAccountEmployee(@RequestBody Customer customer) {
-//		Response response = services.createAccountEmployee(customer);
-//		return new ResponseEntity<>(response, HttpStatus.OK);
-//	}
+	@PostMapping(path = "/createAccountEmployee")
+	public ResponseEntity<Response> createAccountEmployee(@RequestBody Employee employee) {
+		Response response = services.createAccountEmployee(employee);
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
 
 	@GetMapping(path = "/login")
 	public ResponseEntity<Response> login(@RequestParam(name = "user") String user,

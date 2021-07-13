@@ -41,7 +41,7 @@ public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter{
 
 	@Override
 	public void configure(WebSecurity web) throws Exception {
-		 web.ignoring().antMatchers("/houseCleaning/login", "/houseCleaning/createAccountCustomer");
+		 web.ignoring().antMatchers("/houseCleaning/login", "/houseCleaning/createAccountCustomer", "/houseCleaning/createAccountEmployee");
 	}	
 
 }
