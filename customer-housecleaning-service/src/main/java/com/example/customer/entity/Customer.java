@@ -60,5 +60,6 @@ public class Customer {
 	@Column(name = "phoneNumber")
 	private Long phoneNumber;
 	
-	
+	@Column(name = "countService")
+	private Long countService;
 }

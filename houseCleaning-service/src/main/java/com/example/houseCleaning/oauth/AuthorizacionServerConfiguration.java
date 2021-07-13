@@ -46,7 +46,8 @@ public class AuthorizacionServerConfiguration extends AuthorizationServerConfigu
 
 	@Override
 	public void configure(AuthorizationServerEndpointsConfigurer endpoints) throws Exception {
-		endpoints.authenticationManager(authenticationManager).tokenStore(tokenStore);
+		endpoints
+		.authenticationManager(authenticationManager).tokenStore(tokenStore);
 	}
 
 	@Bean

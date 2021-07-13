@@ -1,24 +1,16 @@
 package com.example.customer.services;
 
-import java.util.Collection;
+
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import javax.validation.Valid;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.BindingResult;
-
 import com.example.customer.entity.Customer;
 import com.example.customer.entity.Response;
 import com.example.customer.entity.ValidationException;
 import com.example.customer.repository.RepositoryCustomers;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 
 @Service
 public class Services {
@@ -39,8 +31,9 @@ public class Services {
 		}
 	}
 
-	public Response save(@Valid Customer customer, BindingResult validResult) {
+	public Response save(Customer customer, BindingResult validResult) {
 		Response response = new Response();
+		customer.setCountService(0L);
 		Customer customerFound = repository.findCustomerByEmail(customer.getEmail());
 		boolean matcherPhoneNumber = validatePhoneNumberAndEmail(customer.getPhoneNumber(), customer.getEmail());
 		if(matcherPhoneNumber && !validResult.hasErrors()) {
