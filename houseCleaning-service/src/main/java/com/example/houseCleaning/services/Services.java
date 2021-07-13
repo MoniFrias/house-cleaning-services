@@ -11,6 +11,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
+
+import com.example.houseCleaning.entity.BookService;
 import com.example.houseCleaning.entity.Customer;
 import com.example.houseCleaning.entity.Employee;
 import com.example.houseCleaning.entity.Response;
@@ -96,6 +98,11 @@ public class Services {
 	public Response login(String user, String pass) {
 		Response response = new Response();
 		return response;
+	}
+
+	public Response bookService(BookService bookService) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 	

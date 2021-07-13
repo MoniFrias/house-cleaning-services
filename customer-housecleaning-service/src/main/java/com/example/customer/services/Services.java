@@ -59,6 +59,17 @@ public class Services {
 		}	
 	}
 	
+	public Response findById(Long id) {
+		Response response = new Response();
+		Customer customer = repository.findCustomerById(id);
+		if (customer != null ) {
+			response.setData(customer);
+			return response;
+		}else {
+			throw new ValidationException("Is empty");
+		}	
+	}
+	
 	public Response findByCity(String city) {
 		Response response = new Response();
 		List<Customer> listCustomer = repository.findCustomerByCity(city);
