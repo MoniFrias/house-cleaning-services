@@ -1,4 +1,4 @@
-package com.example.houseCleaning.entity;
+package com.example.employee.entity;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -16,37 +16,19 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-public class BookService {
+public class Appointment {
 
 	@Id
 	@GeneratedValue
 	private Long id;
 	
-	@Column(name = "bookNumber")
-	private Long bookNumber;
-	
-	@Column(name = "idCustomer")
-	private Long idCustomer;
-	
 	@Column(name = "idEmployee")
 	private Long idEmployee;
-	
-	@Column(name = "codeP")
-	private Long codeP;
-	
-	@Column(name = "typeService")
-	private String typeService;
 	
 	@Column(name = "date")
 	private LocalDate date;
 	
 	@Column(name = "time")
 	private LocalTime time;
-	
-	@Column(name = "cost")
-	private Long cost;
-	
-	@Column(name = "statusPay")
-	private String statusPay;
 
 }

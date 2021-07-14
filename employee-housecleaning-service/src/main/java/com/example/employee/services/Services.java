@@ -2,8 +2,10 @@ package com.example.employee.services;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import javax.validation.Valid;
 
@@ -11,9 +13,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.BindingResult;
 
+import com.example.employee.entity.Appointment;
 import com.example.employee.entity.Employee;
 import com.example.employee.entity.Response;
 import com.example.employee.entity.ValidationException;
+import com.example.employee.repository.RepositoryAppointment;
 import com.example.employee.repository.RepositoryEmployee;
 
 @Service
@@ -21,6 +25,8 @@ public class Services {
 
 	@Autowired
 	RepositoryEmployee repository;
+	@Autowired
+	RepositoryAppointment repositoryAppointment;
 	
 	
 	Pattern patternPhone, patternNss;
@@ -52,6 +58,12 @@ public class Services {
 		}else {
 			throw new ValidationException("Some values are wrong");
 		}
+	}
+	
+	public Response saveAppointment(Appointment appointment) {
+		Response response = new Response();
+		response.setData(repositoryAppointment.save(appointment));
+		return response;
 	}
 
 	public Response findAll() {
@@ -87,17 +99,28 @@ public class Services {
 		}	
 	}
 	
+	
 	public Response findByPostalCode(String code) {
 		Response response = new Response();
 		List<Employee> listEmployee = repository.findEmployeeByPostalCode(code);
 		if (!listEmployee.isEmpty()) {
-			response.setData(listEmployee);
+			
+			List<Employee> listEmployeeNew = listEmployee.stream().map(employee ->{
+				List<Appointment> appointments = repositoryAppointment.findAppointmentByIdEmployee(employee.getId());
+				if (appointments.isEmpty()) {
+					return null;
+				}
+				employee.setAppointments(appointments);
+				return employee;
+			}).filter(Objects::nonNull).collect(Collectors.toList());	
+			
+			response.setData(listEmployeeNew);
 			return response;
 		}else {
 			throw new ValidationException("There aren't Customers in that Postal code");
 		}	
 	}
-	
+		
 	private Employee updateEmployee(Employee employee, Employee employeeFound) {
 		employeeFound.setName(employee.getName());
 		employeeFound.setLastName(employee.getLastName());

@@ -1,19 +1,16 @@
 package com.example.employee.entity;
 
-import java.time.LocalDate;
-import java.time.LocalTime;
 import java.util.List;
 
 import javax.persistence.Column;
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.Transient;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
-
-import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.format.annotation.DateTimeFormat.ISO;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -67,6 +64,9 @@ public class Employee {
 	@Column(name = "phoneNumber")
 	private Long phoneNumber;
 
+//	@Column(name="appointments")
+//	@ElementCollection(targetClass=Appointment.class)
+	@Transient
+	private List<Appointment> appointments;
 	
-
 }

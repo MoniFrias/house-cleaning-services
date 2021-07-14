@@ -1,5 +1,6 @@
 package com.example.houseCleaning.entity;
 
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -18,5 +19,5 @@ public class Employee {
 	private String state;
 	private String postalCode;
 	private Long phoneNumber;
-
+	private List<Appointment> appointments;
 }

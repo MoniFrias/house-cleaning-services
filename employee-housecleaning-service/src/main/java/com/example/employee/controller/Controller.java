@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.employee.entity.Appointment;
 import com.example.employee.entity.Employee;
 import com.example.employee.entity.Response;
 import com.example.employee.services.Services;
@@ -31,6 +32,12 @@ public class Controller {
 	@PostMapping(path = "/save")
 	public ResponseEntity<Response> save(@Valid @RequestBody Employee employee,BindingResult validResult){
 		Response response = services.save(employee,validResult);
+		return new ResponseEntity<>(response,HttpStatus.OK);
+	}
+	
+	@PostMapping(path = "/saveAppointment")
+	public ResponseEntity<Response> saveAppointment(@RequestBody Appointment appointment){
+		Response response = services.saveAppointment(appointment);
 		return new ResponseEntity<>(response,HttpStatus.OK);
 	}
 	
