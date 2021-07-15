@@ -1,7 +1,9 @@
 package com.example.houseCleaning.services;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -126,29 +128,31 @@ public class Services {
 	public Response bookService(BookService bookService) {
 		Response response = new Response();
 		List<Employee> listEmployee;
+		final LocalDate dateBook = bookService.getDate();
 		try {
 			listEmployee = employeeFindByPostalCode(bookService.getCodeP());
 		} catch (JsonProcessingException e) {
 			log.error("error {}",e);
 			throw new ValidationException(e.getMessage());
 		}
-//		
-//		List<Employee> listEmployeeNew = listEmployee.stream().map(employee ->{
-//			List<Appointment> lisAppointments = employee.getAppointments();
-//			List<Appointment> lisAppointmentsNew = lisAppointments.stream().map(app ->{
-//				if(app.getDate() == bookService.getDate()) {
-//					boolean flat = true;//tiene cita ese dia
-//					return null;
-//				}				
-//				Appointment appoi = app;
-//				return appoi;
-//			}).filter(Objects::nonNull).collect(Collectors.toList());
-//			employee.setAppointments(lisAppointmentsNew);
-//			return employee;
-//		}).filter(Objects::nonNull).collect(Collectors.toList());
 		
+		Optional<Employee> employeeA = listEmployee.stream().map(employee -> {
+			long count =0;
+			if (employee.getAppointments() != null) {
+				count = employee.getAppointments().parallelStream()
+						.filter(appointment -> dateBook.isEqual(appointment.getDate())).count();
+			}
+			return (count > 0) ? null : employee;
+		}).filter(Objects::nonNull).findFirst();
 		
-		response.setData(listEmployee);
+		if(employeeA.isPresent()) {
+			Employee employee = employeeA.get();
+			bookService.setIdEmployee(employee.getId());
+			response.setData(bookService);
+			return response;
+		}
+		
+		response.setData(null);
 		return response;
 	}
 	
