@@ -1,6 +1,7 @@
 package com.example.employee.services;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.regex.Matcher;
@@ -105,16 +106,16 @@ public class Services {
 		List<Employee> listEmployee = repository.findEmployeeByPostalCode(code);
 		if (!listEmployee.isEmpty()) {
 			
-//			List<Employee> listEmployeeNew = listEmployee.stream().map(employee ->{
-//				List<Appointment> appointments = repositoryAppointment.findAppointmentByIdEmployee(employee.getId());
-//				if (appointments.isEmpty()) {
-//					return null;
-//				}
-//				employee.setAppointments(appointments);
-//				return employee;
-//			}).filter(Objects::nonNull).collect(Collectors.toList());	
+			List<Employee> listEmployeeNew = listEmployee.stream().map(employee ->{
+				List<Appointment> appointments = repositoryAppointment.findAppointmentByIdEmployee(employee.getId());
+				if (appointments.isEmpty()) {
+					employee.setAppointments(new ArrayList<>());
+				}
+				employee.setAppointments(appointments);
+				return employee;
+			}).filter(Objects::nonNull).collect(Collectors.toList());	
 			
-			response.setData(listEmployee);
+			response.setData(listEmployeeNew);
 			return response;
 		}else {
 			throw new ValidationException("There aren't Customers in that Postal code");

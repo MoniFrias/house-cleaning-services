@@ -11,6 +11,7 @@ import javax.persistence.Id;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.format.annotation.DateTimeFormat.ISO;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer;
@@ -46,10 +47,12 @@ public class BookService {
 	private String typeService;
 	
 	@Column(name = "date")
+//	@DateTimeFormat(pattern = "yyyy-MM-dd HH:mm", iso = ISO.DATE_TIME)
+//	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
 	private LocalDate date;
 	
-	@Column(name = "time")
-	private LocalTime time;
+//	@Column(name = "time")
+//	private LocalTime time;
 	
 	@Column(name = "cost")
 	private Long cost;

@@ -1,5 +1,6 @@
 package com.example.houseCleaning.entity;
 
+
 import java.time.LocalDate;
 import java.time.LocalTime;
 import lombok.AllArgsConstructor;
@@ -9,7 +10,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class Appointment {
+public class Appointment{
 
 	private Long id;
 	private Long idEmployee;

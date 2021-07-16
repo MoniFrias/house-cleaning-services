@@ -4,20 +4,12 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
-
-import com.example.houseCleaning.entity.Appointment;
 import com.example.houseCleaning.entity.BookService;
 import com.example.houseCleaning.entity.Customer;
 import com.example.houseCleaning.entity.Employee;
@@ -87,6 +79,7 @@ public class Services {
 		
 		Object objectEmployee = objectResponse.getData();
 		ObjectMapper objectMapper = new ObjectMapper();
+		objectMapper.findAndRegisterModules();
 		String stringResponse = objectMapper.writeValueAsString(objectEmployee);
 		List<Employee> responseEmployee = objectMapper.readValue(stringResponse, new TypeReference<List<Employee>>() {});
 		return responseEmployee;
@@ -150,10 +143,9 @@ public class Services {
 			bookService.setIdEmployee(employee.getId());
 			response.setData(bookService);
 			return response;
+		}else {
+			throw new ValidationException("employeeA is empty");
 		}
-		
-		response.setData(null);
-		return response;
 	}
 	
 	
