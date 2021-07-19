@@ -5,6 +5,8 @@ import java.time.LocalTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Random;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -17,6 +19,7 @@ import com.example.houseCleaning.entity.Employee;
 import com.example.houseCleaning.entity.Response;
 import com.example.houseCleaning.entity.TypeService;
 import com.example.houseCleaning.entity.ValidationException;
+import com.example.houseCleaning.repository.RepositoryBook;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -30,6 +33,9 @@ public class Services {
 
 	@Autowired
 	WebClient webClient;
+	@Autowired
+	RepositoryBook repository;
+	
 	@Value("${customerSave}")
 	private String customerSave;
 	@Value("${customerFindById}")
@@ -168,64 +174,51 @@ public class Services {
 		try {
 			listEmployee = employeeFindByPostalCode(bookService.getCodeP());
 		} catch (JsonProcessingException e) {
-			log.error("error {}",e);
+			log.error("error {}", e);
 			throw new ValidationException(e.getMessage());
 		}
-		
+
 		Optional<Employee> employeeA = listEmployee.stream().map(employee -> {
-			long count =0;
+			long count = 0;
 			if (employee.getAppointments() != null) {
 				count = employee.getAppointments().parallelStream()
-						.filter(appointment -> dateBook.isEqual(appointment.getDate()) && timeBook.equals(appointment.getTime()) ).count();
+						.filter(appointment -> dateBook.isEqual(appointment.getDate())
+								&& timeBook.equals(appointment.getTime()))
+						.count();
 			}
 			return (count > 0) ? null : employee;
 		}).filter(Objects::nonNull).findFirst();
-		
-	
-		
-		if(employeeA.isPresent()) {
+
+		if (employeeA.isPresent()) {
 			Employee employee = employeeA.get();
 			Customer customerStatus = customerFindById(bookService.getIdCustomer());
+			String numberGenerate = LocalDate.now().getYear() + bookService.getCodeP().toString() + bookService.getIdCustomer();
 			TypeService typeServiceFound = typeServiceFindByType(bookService.getTypeService());
-			
-			if(customerStatus.getCountService() == 0) {	
-				
+
+			if (customerStatus.getCountService() == 0) {
 				double descount = typeServiceFound.getCost() * (0.2);
 				Long costTotal = typeServiceFound.getCost() - (new Double(descount)).longValue();
-				customerUpdateCountService(bookService.getIdCustomer(), 1L);
-				bookService.setCost(costTotal);				
-				bookService.setIdEmployee(employee.getId());				
-				response.setData(bookService);
+				customerUpdateCountService(bookService.getIdCustomer(), 1L);				
+				bookService.setBookNumber(Long.parseLong(numberGenerate));
+				bookService.setCost(costTotal);
+				bookService.setIdEmployee(employee.getId());
+				response.setData(repository.save(bookService));
 				return response;
-			}			
-			Long countNew = customerStatus.getCountService()+1L;
-			customerUpdateCountService(bookService.getIdCustomer(), countNew);
-			bookService.setIdEmployee(employee.getId());
-			bookService.setCost(typeServiceFound.getCost());
-			response.setData(bookService);
-			return response;
-		}else {
-			throw new ValidationException("employeeA is empty");
+			} else {
+				Long countNew = customerStatus.getCountService() + 1L;
+				customerUpdateCountService(bookService.getIdCustomer(), countNew);			
+				bookService.setBookNumber(Long.parseLong(numberGenerate));
+				bookService.setIdEmployee(employee.getId());
+				bookService.setCost(typeServiceFound.getCost());
+				response.setData(repository.save(bookService));
+				return response;
+			}
+		} else {
+			throw new ValidationException("There aren't employees");
 		}
 	}
 	
-	
-	
 
-//	public Response bookService(BookService bookService) {
-//		Response response = new Response();
-//		List<Employee> listEmployee;
-//		try {
-//			listEmployee = employeeFindByPostalCode(bookService.getCodeP());
-//		} catch (JsonProcessingException e) {
-//			log.error("error {}",e);
-//			throw new ValidationException(e.getMessage());
-//		}
-//		response.setData(listEmployee);
-//		return response;
-//	}
-
-	
 
 	
 
