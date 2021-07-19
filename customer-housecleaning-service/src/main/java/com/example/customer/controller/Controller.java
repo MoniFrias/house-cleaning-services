@@ -83,6 +83,12 @@ public class Controller {
 		return new ResponseEntity<>(response,HttpStatus.OK);
 	}
 	
+	@PutMapping(path = "/updateCountService")
+	public ResponseEntity<Response> updateCountService(@RequestParam Long id, @RequestParam Long count){
+		Response response = services.updateCountService(id,count);
+		return new ResponseEntity<>(response,HttpStatus.OK);
+	}
+	
 	@DeleteMapping(path = "/deleteById")
 	public ResponseEntity<Response> deleteById(@RequestHeader(name = "id") Long id){
 		Response response = services.deleteById(id);

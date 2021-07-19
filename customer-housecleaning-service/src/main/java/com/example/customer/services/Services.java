@@ -142,6 +142,22 @@ public class Services {
 		}else {
 			throw new ValidationException("Id can't be null or zero");
 		}
+	}	
+
+	public Response updateCountService(Long id,Long count) {
+		Response response = new Response();
+		Customer customerFound = repository.findCustomerById(id);
+		if (count != null && count > 0) {
+			if (customerFound != null) {
+				customerFound.setCountService(count);
+				response.setData(repository.save(customerFound));
+				return response;
+			}else {
+				throw new ValidationException("There isn't a customer with that Id");
+			}
+		}else {
+			throw new ValidationException("Id can't be null or zero");
+		}
 	}
 
 	public Response deleteById(Long id) {
@@ -170,4 +186,6 @@ public class Services {
 			throw new ValidationException("There aren't Customers in that State");
 		}	
 	}
+
+	
 }

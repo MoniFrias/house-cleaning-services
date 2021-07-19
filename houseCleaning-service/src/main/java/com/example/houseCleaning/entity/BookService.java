@@ -51,8 +51,8 @@ public class BookService {
 //	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
 	private LocalDate date;
 	
-//	@Column(name = "time")
-//	private LocalTime time;
+	@Column(name = "time")
+	private LocalTime time;
 	
 	@Column(name = "cost")
 	private Long cost;

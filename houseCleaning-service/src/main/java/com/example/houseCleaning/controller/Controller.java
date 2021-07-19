@@ -22,6 +22,8 @@ import com.example.houseCleaning.entity.Customer;
 import com.example.houseCleaning.entity.Employee;
 import com.example.houseCleaning.entity.Response;
 import com.example.houseCleaning.services.Services;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 
 @EnableResourceServer
 @RestController
@@ -61,7 +63,7 @@ public class Controller extends ResourceServerConfigurerAdapter{
 	}
 	
 	@PostMapping(path = "/bookService")
-	public ResponseEntity<Response> bookService(@RequestBody BookService bookService) {
+	public ResponseEntity<Response> bookService(@RequestBody BookService bookService) throws JsonMappingException, JsonProcessingException {
 		Response response = services.bookService(bookService);
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
