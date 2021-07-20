@@ -28,6 +28,6 @@ public class TypeService {
 	private Long cost;
 	
 	@Column(name = "timeSuggested")
-	private Float timeSuggested;
+	private Long timeSuggested;
 
 }

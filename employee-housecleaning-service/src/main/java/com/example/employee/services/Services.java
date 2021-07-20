@@ -1,6 +1,7 @@
 package com.example.employee.services;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -11,15 +12,20 @@ import java.util.stream.Collectors;
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.BindingResult;
+import org.springframework.web.reactive.function.client.WebClient;
 
 import com.example.employee.entity.Appointment;
 import com.example.employee.entity.Employee;
 import com.example.employee.entity.Response;
+import com.example.employee.entity.TypeService;
 import com.example.employee.entity.ValidationException;
 import com.example.employee.repository.RepositoryAppointment;
 import com.example.employee.repository.RepositoryEmployee;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Service
 public class Services {
@@ -28,7 +34,10 @@ public class Services {
 	RepositoryEmployee repository;
 	@Autowired
 	RepositoryAppointment repositoryAppointment;
-	
+	@Autowired
+	WebClient webClient;
+	@Value("${typeServiceFindByType}")	
+	private String typeServiceFindByType;
 	
 	Pattern patternPhone, patternNss;
 	Matcher matcherPhone, matcherNss;
@@ -43,6 +52,20 @@ public class Services {
 		}else {
 			return false;
 		}		
+	}
+	
+	private TypeService typeServiceFound(String type) throws JsonProcessingException {
+		Response objectResponse = null;
+		try {
+			objectResponse = webClient.get().uri(typeServiceFindByType+type).retrieve().bodyToMono(Response.class).block();
+		}catch (Exception e) {
+			throw new ValidationException("There aren't type services with that name");
+		}				
+		Object objectType = objectResponse.getData();
+		ObjectMapper objectMapper = new ObjectMapper();
+		String stringResponse = objectMapper.writeValueAsString(objectType);
+		TypeService responseType = objectMapper.readValue(stringResponse, TypeService.class);
+		return responseType;
 	}
 
 	public Response save(Employee employee, BindingResult validResult) {
@@ -61,10 +84,17 @@ public class Services {
 		}
 	}
 	
-	public Response saveAppointment(Appointment appointment) {
+	public Response saveAppointment(Appointment appointment) throws JsonProcessingException {
 		Response response = new Response();
-		response.setData(repositoryAppointment.save(appointment));
-		return response;
+		TypeService typeServiceFound = typeServiceFound(appointment.getTypeService());
+		if (typeServiceFound != null) {
+			LocalTime endTime = appointment.getStarTime().plusHours(typeServiceFound.getTimeSuggested());
+			appointment.setEndTime(endTime);
+			response.setData(repositoryAppointment.save(appointment));
+			return response;
+		}else {
+			throw new ValidationException("There aren't services with that name");
+		}
 	}
 
 	public Response findAll() {

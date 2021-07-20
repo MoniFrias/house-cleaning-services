@@ -47,13 +47,11 @@ public class BookService {
 	private String typeService;
 	
 	@Column(name = "date")
-//	@DateTimeFormat(pattern = "yyyy-MM-dd HH:mm", iso = ISO.DATE_TIME)
-//	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
 	private LocalDate date;
 	
-	@Column(name = "time")
-	private LocalTime time;
-	
+	@Column(name = "starTime")
+	private LocalTime starTime;
+		
 	@Column(name = "cost")
 	private Long cost;
 	

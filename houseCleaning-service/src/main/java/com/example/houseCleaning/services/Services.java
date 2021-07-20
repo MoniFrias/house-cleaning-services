@@ -13,6 +13,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.http.MediaType;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
+
+import com.example.houseCleaning.entity.Appointment;
 import com.example.houseCleaning.entity.BookService;
 import com.example.houseCleaning.entity.Customer;
 import com.example.houseCleaning.entity.Employee;
@@ -40,16 +42,20 @@ public class Services {
 	private String customerSave;
 	@Value("${customerFindById}")
 	private String customerFindById;
+	@Value("${customerFindByEmail}")
+	private String customerFindByEmail;
 	@Value("${customerUpdateCountService}")
 	private String customerUpdateCountService;
-	@Value("${customerUpdateCountServiceAnd}")
-	private String customerUpdateCountServiceAnd;
 	@Value("${employeeSave}")
 	private String employeeSave;
 	@Value("${employeeFindByPostalCode}")
 	private String employeeFindByPostalCode;
+	@Value("${employeeSaveAppointment}")
+	private String employeeSaveAppointment;
 	@Value("${typeServiceFindByType}")	
 	private String typeServiceFindByType;
+	
+	
 	
 	private Customer saveCustomer(Customer customer) throws JsonMappingException, JsonProcessingException {
 		MediaType contentType = null;
@@ -130,8 +136,29 @@ public class Services {
 
 	}
 	
+	private Customer customerFindByEmail(String email) throws JsonProcessingException {
+		Response objectResponse = null;
+		try {
+			objectResponse = webClient.get().uri(customerFindByEmail+email).retrieve().bodyToMono(Response.class).block();
+		}catch (Exception e) {
+			throw new ValidationException("There isn't a customer with that Email");
+		}				
+		Object objectCustomer = objectResponse.getData();
+		ObjectMapper objectMapper = new ObjectMapper();
+		String stringResponse = objectMapper.writeValueAsString(objectCustomer);
+		Customer responseCustomer = objectMapper.readValue(stringResponse, Customer.class);
+		return responseCustomer;
+	}
+	
+	private void employeeSaveAppointment(Appointment appointment) {
+		MediaType contentType = null;
+		webClient.post().uri(employeeSaveAppointment).contentType(contentType.APPLICATION_JSON)
+		.body(BodyInserters.fromValue(appointment)).retrieve().bodyToMono(Response.class).block();
+	}
+	
 	private void customerUpdateCountService(Long id, Long count) {
-		webClient.put().uri(customerUpdateCountService+id+customerUpdateCountServiceAnd+count).retrieve().bodyToMono(Response.class).block();
+		webClient.put().uri(customerUpdateCountService, uri -> uri.queryParam("id", id).queryParam("count", count).build()) 
+		.retrieve().bodyToMono(Response.class).block();
 	}
 	
 	public Response createAccountCustomer(Customer customer) {
@@ -161,16 +188,23 @@ public class Services {
 		return response;
 	}
 	
-	public Response login(String user, String pass) {
-		Response response = new Response();		
-		return response;
+	public Response login(String email) throws JsonProcessingException {
+		Response response = new Response();	
+		Customer customerFound = customerFindByEmail(email);
+		if(customerFound != null) {
+			response.setMessage("Welcome "+ customerFound.getName());
+			return response;
+		}else {
+			throw new ValidationException("There aren't customers with that email");
+		}
+		
 	}
 		
 	public Response bookService(BookService bookService) throws JsonMappingException, JsonProcessingException {
 		Response response = new Response();
 		List<Employee> listEmployee;
 		final LocalDate dateBook = bookService.getDate();
-		final LocalTime timeBook = bookService.getTime();
+		final LocalTime timeBook = bookService.getStarTime();
 		try {
 			listEmployee = employeeFindByPostalCode(bookService.getCodeP());
 		} catch (JsonProcessingException e) {
@@ -183,7 +217,7 @@ public class Services {
 			if (employee.getAppointments() != null) {
 				count = employee.getAppointments().parallelStream()
 						.filter(appointment -> dateBook.isEqual(appointment.getDate())
-								&& timeBook.equals(appointment.getTime()))
+								&& !timeBook.isBefore(appointment.getStarTime()) && !timeBook.isAfter(appointment.getEndTime()))
 						.count();
 			}
 			return (count > 0) ? null : employee;
@@ -192,24 +226,25 @@ public class Services {
 		if (employeeA.isPresent()) {
 			Employee employee = employeeA.get();
 			Customer customerStatus = customerFindById(bookService.getIdCustomer());
-			String numberGenerate = LocalDate.now().getYear() + bookService.getCodeP().toString() + bookService.getIdCustomer();
 			TypeService typeServiceFound = typeServiceFindByType(bookService.getTypeService());
 
 			if (customerStatus.getCountService() == 0) {
 				double descount = typeServiceFound.getCost() * (0.2);
 				Long costTotal = typeServiceFound.getCost() - (new Double(descount)).longValue();
-				customerUpdateCountService(bookService.getIdCustomer(), 1L);				
-				bookService.setBookNumber(Long.parseLong(numberGenerate));
+				customerUpdateCountService(bookService.getIdCustomer(), 1L);
 				bookService.setCost(costTotal);
 				bookService.setIdEmployee(employee.getId());
+				Appointment appoitmentValues = setValuesAppointment(bookService);
+				employeeSaveAppointment(appoitmentValues);
 				response.setData(repository.save(bookService));
 				return response;
 			} else {
 				Long countNew = customerStatus.getCountService() + 1L;
-				customerUpdateCountService(bookService.getIdCustomer(), countNew);			
-				bookService.setBookNumber(Long.parseLong(numberGenerate));
+				customerUpdateCountService(bookService.getIdCustomer(), countNew);	
 				bookService.setIdEmployee(employee.getId());
 				bookService.setCost(typeServiceFound.getCost());
+				Appointment appoitmentValues = setValuesAppointment(bookService);
+				employeeSaveAppointment(appoitmentValues);
 				response.setData(repository.save(bookService));
 				return response;
 			}
@@ -217,6 +252,22 @@ public class Services {
 			throw new ValidationException("There aren't employees");
 		}
 	}
+	
+	private Appointment setValuesAppointment(BookService bookService) {
+		Appointment appointment = new Appointment();
+		appointment.setIdEmployee(bookService.getIdEmployee());
+		appointment.setTypeService(bookService.getTypeService());
+		appointment.setDate(bookService.getDate());
+		appointment.setStarTime(bookService.getStarTime());
+		return appointment;
+		
+	}
+
+	public Response validatePay(BookService bookService) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	
 	
 
 

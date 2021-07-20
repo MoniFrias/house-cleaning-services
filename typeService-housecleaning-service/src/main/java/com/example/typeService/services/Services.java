@@ -24,11 +24,11 @@ public class Services {
 	Pattern patternCost, patternTime;
 	Matcher matcherCost, matcherTime;
 	
-	private boolean validation(Long cost, Float timeSuggest) {
+	private boolean validation(Long cost, Long timeSuggest) {
 		patternCost = Pattern.compile("[0-9]{3,4}");
-		patternTime = Pattern.compile("[0-9].[0-5][0-9]$");
+		patternTime = Pattern.compile("[0-9]{1,2}");
 		matcherCost = patternCost.matcher(Long.toString(cost));
-		matcherTime = patternTime.matcher(Float.toString(timeSuggest));
+		matcherTime = patternTime.matcher(Long.toString(timeSuggest));
 		if (matcherCost.matches() && matcherTime.matches()) {
 			return true;
 		}else {

@@ -27,11 +27,11 @@ public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter{
 	@Bean
 	@Override
 	public UserDetailsService userDetailsService() {
-		UserDetails user=User.builder().username("user").password(passwEncoder().encode("pass")).
-    			roles("USER").build();
+		UserDetails userLogin=User.builder().username("login").password(passwEncoder().encode("pass")).
+    			roles("LOGIN").build();
 		UserDetails userAdmin=User.builder().username("admin").password(passwEncoder().encode("secret")).
     			roles("ADMIN").build();
-        return new InMemoryUserDetailsManager(user,userAdmin);
+        return new InMemoryUserDetailsManager(userAdmin,userLogin);
     }
 
 	@Bean
@@ -41,7 +41,7 @@ public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter{
 
 	@Override
 	public void configure(WebSecurity web) throws Exception {
-		 web.ignoring().antMatchers("/houseCleaning/login", "/houseCleaning/createAccountCustomer",
+		 web.ignoring().antMatchers("/houseCleaning/createAccountCustomer",
 				 "/houseCleaning/createAccountEmployee", "/houseCleaning/bookService");
 	}	
 

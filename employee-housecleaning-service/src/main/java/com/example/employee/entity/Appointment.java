@@ -25,10 +25,16 @@ public class Appointment {
 	@Column(name = "idEmployee")
 	private Long idEmployee;
 	
+	@Column(name = "typeService")
+	private String typeService;
+	
 	@Column(name = "date")
 	private LocalDate date;
 	
-	@Column(name = "time")
-	private LocalTime time;
+	@Column(name = "starTime")
+	private LocalTime starTime;
+	
+	@Column(name = "endTime")
+	private LocalTime endTime;
 
 }

@@ -21,6 +21,7 @@ import com.example.employee.entity.Appointment;
 import com.example.employee.entity.Employee;
 import com.example.employee.entity.Response;
 import com.example.employee.services.Services;
+import com.fasterxml.jackson.core.JsonProcessingException;
 
 @RestController
 @RequestMapping(path = "/employee")
@@ -36,7 +37,7 @@ public class Controller {
 	}
 	
 	@PostMapping(path = "/saveAppointment")
-	public ResponseEntity<Response> saveAppointment(@RequestBody Appointment appointment){
+	public ResponseEntity<Response> saveAppointment(@RequestBody Appointment appointment) throws JsonProcessingException{
 		Response response = services.saveAppointment(appointment);
 		return new ResponseEntity<>(response,HttpStatus.OK);
 	}

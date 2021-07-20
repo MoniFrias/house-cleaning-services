@@ -33,11 +33,6 @@ public class Controller extends ResourceServerConfigurerAdapter{
 	@Autowired
 	Services services;
 
-	@PostMapping(path = "/privada")
-	public String privada() {
-		return "Pagina Privada";
-	}
-
 	@PostMapping(path = "/admin")
 	public String admin() {
 		return "Pagina Administrador";
@@ -56,9 +51,8 @@ public class Controller extends ResourceServerConfigurerAdapter{
 	}
 
 	@GetMapping(path = "/login")
-	public ResponseEntity<Response> login(@RequestParam(name = "user") String user,
-			@RequestParam(name = "pass") String pass) {
-		Response response = services.login(user, pass);
+	public ResponseEntity<Response> login(@RequestParam(name = "email") String email) throws JsonProcessingException {
+		Response response = services.login(email);
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 	
@@ -67,15 +61,19 @@ public class Controller extends ResourceServerConfigurerAdapter{
 		Response response = services.bookService(bookService);
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
+	
+	@PostMapping(path = "/validatePay")
+	public ResponseEntity<Response> validatePay(@RequestBody BookService bookService) throws JsonMappingException, JsonProcessingException {
+		Response response = services.validatePay(bookService);
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
 
 	@Override
 	public void configure(HttpSecurity http) throws Exception {
-		// http.authorizeRequests().antMatchers("/oauth/token", "/oauth/authorize**",
-		// "/houseCleaning/login").permitAll();
 
-		http.requestMatchers().antMatchers("/houseCleaning/privada").and().authorizeRequests()
-				.antMatchers("/houseCleaning/privada").access("hasRole('USER')")
-
+		http.requestMatchers().antMatchers("/houseCleaning/login").and().authorizeRequests()
+				.antMatchers("/houseCleaning/login").access("hasRole('LOGIN')")
+		
 				.and().requestMatchers().antMatchers("/houseCleaning/admin").and().authorizeRequests()
 				.antMatchers("/houseCleaning/admin").access("hasRole('ADMIN')");
 	}
