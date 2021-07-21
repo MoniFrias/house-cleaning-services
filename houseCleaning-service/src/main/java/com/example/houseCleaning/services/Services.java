@@ -196,15 +196,17 @@ public class Services {
 			return response;
 		}else {
 			throw new ValidationException("There aren't customers with that email");
-		}
-		
+		}		
 	}
 		
 	public Response bookService(BookService bookService) throws JsonMappingException, JsonProcessingException {
 		Response response = new Response();
 		List<Employee> listEmployee;
 		final LocalDate dateBook = bookService.getDate();
-		final LocalTime timeBook = bookService.getStarTime();
+		TypeService typeServiceFound = typeServiceFindByType(bookService.getTypeService());
+		LocalTime appointmentTime = bookService.getStarTime();
+		LocalTime appoitmentEndTime = bookService.getStarTime().plusHours(typeServiceFound.getTimeSuggested());
+		
 		try {
 			listEmployee = employeeFindByPostalCode(bookService.getCodeP());
 		} catch (JsonProcessingException e) {
@@ -217,7 +219,11 @@ public class Services {
 			if (employee.getAppointments() != null) {
 				count = employee.getAppointments().parallelStream()
 						.filter(appointment -> dateBook.isEqual(appointment.getDate())
-								&& !timeBook.isBefore(appointment.getStarTime()) && !timeBook.isAfter(appointment.getEndTime()))
+						&& !appointmentTime.isBefore(appointment.getStarTime())
+						&& !appointmentTime.isAfter(appointment.getEndTime())
+						|| dateBook.isEqual(appointment.getDate())
+								&& !appoitmentEndTime.isBefore(appointment.getStarTime())
+								&& !appoitmentEndTime.isAfter(appointment.getEndTime()))
 						.count();
 			}
 			return (count > 0) ? null : employee;
@@ -226,7 +232,6 @@ public class Services {
 		if (employeeA.isPresent()) {
 			Employee employee = employeeA.get();
 			Customer customerStatus = customerFindById(bookService.getIdCustomer());
-			TypeService typeServiceFound = typeServiceFindByType(bookService.getTypeService());
 
 			if (customerStatus.getCountService() == 0) {
 				double descount = typeServiceFound.getCost() * (0.2);
@@ -235,6 +240,7 @@ public class Services {
 				bookService.setCost(costTotal);
 				bookService.setIdEmployee(employee.getId());
 				Appointment appoitmentValues = setValuesAppointment(bookService);
+				appoitmentValues.setEndTime(appoitmentEndTime);
 				employeeSaveAppointment(appoitmentValues);
 				response.setData(repository.save(bookService));
 				return response;
@@ -244,12 +250,13 @@ public class Services {
 				bookService.setIdEmployee(employee.getId());
 				bookService.setCost(typeServiceFound.getCost());
 				Appointment appoitmentValues = setValuesAppointment(bookService);
+				appoitmentValues.setEndTime(appoitmentEndTime);
 				employeeSaveAppointment(appoitmentValues);
 				response.setData(repository.save(bookService));
 				return response;
 			}
 		} else {
-			throw new ValidationException("There aren't employees");
+			throw new ValidationException("No employees available");
 		}
 	}
 	

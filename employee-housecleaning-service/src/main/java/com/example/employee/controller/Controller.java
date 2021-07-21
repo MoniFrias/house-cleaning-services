@@ -48,6 +48,12 @@ public class Controller {
 		return new ResponseEntity<>(response,HttpStatus.FOUND);
 	}
 	
+	@GetMapping(path = "/findById")
+	public ResponseEntity<Response> findById(@RequestParam(name = "id") Long id){
+		Response response = services.findById(id);
+		return new ResponseEntity<>(response,HttpStatus.FOUND);
+	}
+	
 	@GetMapping(path = "/findByCity")
 	public ResponseEntity<Response> findByCity(@RequestParam(name = "city") String city){
 		Response response = services.findByCity(city);

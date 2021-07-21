@@ -57,5 +57,7 @@ public class BookService {
 	
 	@Column(name = "statusPay")
 	private String statusPay;
+	
+	
 
 }

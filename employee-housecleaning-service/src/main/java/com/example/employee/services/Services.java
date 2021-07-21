@@ -68,6 +68,25 @@ public class Services {
 		return responseType;
 	}
 
+	private Employee addAppointment(Employee employee) {
+		List<Appointment> appointments = repositoryAppointment.findAppointmentByIdEmployee(employee.getId());
+		if (appointments.isEmpty()) {
+			employee.setAppointments(new ArrayList<>());
+			return employee;
+		} else {
+			employee.setAppointments(appointments);
+			return employee;
+		}
+	}
+	
+	private List<Employee> addAppointmentListEmployee(List<Employee> listEmployee){
+		listEmployee.stream().map(employee -> {
+			Employee employeeNew = addAppointment(employee);
+			return employeeNew;
+		}).filter(Objects::nonNull).collect(Collectors.toList());
+		return listEmployee;
+	}
+	
 	public Response save(Employee employee, BindingResult validResult) {
 		Response response = new Response();
 		boolean validation = validation(employee.getPhoneNumber(), employee.getEmail(), employee.getNss());
@@ -86,36 +105,81 @@ public class Services {
 	
 	public Response saveAppointment(Appointment appointment) throws JsonProcessingException {
 		Response response = new Response();
+		long count = 0;
 		TypeService typeServiceFound = typeServiceFound(appointment.getTypeService());
-		if (typeServiceFound != null) {
-			LocalTime endTime = appointment.getStarTime().plusHours(typeServiceFound.getTimeSuggested());
-			appointment.setEndTime(endTime);
-			response.setData(repositoryAppointment.save(appointment));
-			return response;
-		}else {
-			throw new ValidationException("There aren't services with that name");
-		}
+		LocalDate appointmentDate = appointment.getDate();
+		LocalTime appointmentTime = appointment.getStarTime();
+		LocalTime appoitmentEndTime = appointment.getStarTime().plusHours(typeServiceFound.getTimeSuggested());//se calcula con base al ingresado	
+		Employee employee = repository.findEmployeeById(appointment.getIdEmployee());
+		if (employee != null) {			
+			if (typeServiceFound != null) {
+				Employee employeeNew = addAppointment(employee);
+				if (employeeNew.getAppointments() != null) {
+					count = employee.getAppointments().parallelStream()
+							.filter(appointmentFilter -> appointmentDate.isEqual(appointmentFilter.getDate())
+									&& !appointmentTime.isBefore(appointmentFilter.getStarTime())
+									&& !appointmentTime.isAfter(appointmentFilter.getEndTime())
+									|| appointmentDate.isEqual(appointmentFilter.getDate()) 
+									&& !appoitmentEndTime.isBefore(appointmentFilter.getStarTime())
+									&& !appoitmentEndTime.isAfter(appointmentFilter.getEndTime())
+									)
+							.count();
+					if (count == 0) {						
+						appointment.setEndTime(appoitmentEndTime);
+						response.setData(repositoryAppointment.save(appointment));
+						return response;
+					} else {
+						throw new ValidationException("That schedule is not available, there is already an appointment");
+					}
+				} else {//Guarda sin validar porque hay disponibilidad
+					appointment.setEndTime(appoitmentEndTime);
+					response.setData(repositoryAppointment.save(appointment));
+					return response;
+				}
+			} 
+		}  
+		throw new ValidationException("There aren't employee with that ID");		
 	}
 
 	public Response findAll() {
 		Response response = new Response();
 		List<Employee> listEmployee = repository.findAll();
 		if (!listEmployee.isEmpty()) {
+			listEmployee.stream().map(employee -> {
+				Employee employeeNew = addAppointment(employee);
+				return employeeNew;
+			}).filter(Objects::nonNull).collect(Collectors.toList());
+
 			response.setData(listEmployee);
 			return response;
-		}else {
-			throw new ValidationException("Is empty");
-		}	
+		} else {
+			throw new ValidationException("There aren't employees");
+		}
 	}
 
+	
+	
+	public Response findById(Long id) {
+		Response response = new Response();
+		Employee employee = repository.findEmployeeById(id);
+		if (employee != null) {
+			Employee employeeNew = addAppointment(employee);		
+			response.setData(employeeNew);
+			return response;
+		}else {
+			throw new ValidationException("There aren't employees with that ID");
+		}	
+	}
+	
 	public Response findByCity(String city) {
 		Response response = new Response();
 		List<Employee> listEmployee = repository.findEmployeeByCity(city);
 		if (!listEmployee.isEmpty()) {
-			response.setData(listEmployee);
+			List<Employee> listEmployeeNew = addAppointmentListEmployee(listEmployee);			
+			response.setData(listEmployeeNew);
 			return response;
 		}else {
-			throw new ValidationException("Is empty");
+			throw new ValidationException("There aren't Employees in that city");
 		}
 	}
 	
@@ -123,10 +187,11 @@ public class Services {
 		Response response = new Response();
 		List<Employee> listEmployee = repository.findEmployeeByState(state);
 		if (!listEmployee.isEmpty()) {
-			response.setData(listEmployee);
+			List<Employee> listEmployeeNew = addAppointmentListEmployee(listEmployee);			
+			response.setData(listEmployeeNew);
 			return response;
 		}else {
-			throw new ValidationException("There aren't Customers in that State");
+			throw new ValidationException("There aren't Employees in that State");
 		}	
 	}
 	
@@ -135,16 +200,16 @@ public class Services {
 		Response response = new Response();
 		List<Employee> listEmployee = repository.findEmployeeByPostalCode(code);
 		if (!listEmployee.isEmpty()) {
-			
-			List<Employee> listEmployeeNew = listEmployee.stream().map(employee ->{
-				List<Appointment> appointments = repositoryAppointment.findAppointmentByIdEmployee(employee.getId());
-				if (appointments.isEmpty()) {
-					employee.setAppointments(new ArrayList<>());
-				}
-				employee.setAppointments(appointments);
-				return employee;
-			}).filter(Objects::nonNull).collect(Collectors.toList());	
-			
+//			
+//			List<Employee> listEmployeeNew = listEmployee.stream().map(employee ->{
+//				List<Appointment> appointments = repositoryAppointment.findAppointmentByIdEmployee(employee.getId());
+//				if (appointments.isEmpty()) {
+//					employee.setAppointments(new ArrayList<>());
+//				}
+//				employee.setAppointments(appointments);
+//				return employee;
+//			}).filter(Objects::nonNull).collect(Collectors.toList());	
+			List<Employee> listEmployeeNew = addAppointmentListEmployee(listEmployee);			
 			response.setData(listEmployeeNew);
 			return response;
 		}else {

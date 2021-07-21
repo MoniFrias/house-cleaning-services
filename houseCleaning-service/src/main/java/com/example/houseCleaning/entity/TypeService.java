@@ -12,6 +12,6 @@ public class TypeService {
 	private Long id;
 	private String name;	
 	private Long cost;
-	private Float timeSuggested;
+	private Long timeSuggested;
 
 }
