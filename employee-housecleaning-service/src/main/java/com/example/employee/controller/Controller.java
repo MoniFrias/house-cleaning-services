@@ -37,8 +37,8 @@ public class Controller {
 	}
 	
 	@PostMapping(path = "/saveAppointment")
-	public ResponseEntity<Response> saveAppointment(@RequestBody Appointment appointment) throws JsonProcessingException{
-		Response response = services.saveAppointment(appointment);
+	public ResponseEntity<Response> saveAppointment(@Valid @RequestBody Appointment appointment, BindingResult validResultApp) throws JsonProcessingException{
+		Response response = services.saveAppointment(appointment, validResultApp);
 		return new ResponseEntity<>(response,HttpStatus.OK);
 	}
 	

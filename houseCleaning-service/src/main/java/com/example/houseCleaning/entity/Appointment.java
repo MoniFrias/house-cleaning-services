@@ -14,6 +14,7 @@ public class Appointment{
 
 	private Long id;
 	private Long idEmployee;
+	private Long idCustomer;
 	private String typeService;
 	private LocalDate date;
 	private LocalTime starTime;

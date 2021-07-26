@@ -7,6 +7,8 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
 
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.format.annotation.DateTimeFormat.ISO;
@@ -34,21 +36,28 @@ public class BookService {
 	@Column(name = "bookNumber")
 	private Long bookNumber;
 	
+	@NotNull
 	@Column(name = "idCustomer")
 	private Long idCustomer;
+	
 	
 	@Column(name = "idEmployee")
 	private Long idEmployee;
 	
+	@NotNull
 	@Column(name = "codeP")
 	private Long codeP;
 	
+	@NotNull
+	@Pattern(regexp = "[a-zA-Z]{5,20}")
 	@Column(name = "typeService")
 	private String typeService;
 	
+	@NotNull
 	@Column(name = "date")
 	private LocalDate date;
 	
+	@NotNull
 	@Column(name = "starTime")
 	private LocalTime starTime;
 		

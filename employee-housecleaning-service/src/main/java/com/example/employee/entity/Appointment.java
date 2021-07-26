@@ -7,6 +7,8 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -22,15 +24,24 @@ public class Appointment {
 	@GeneratedValue
 	private Long id;
 	
+	@NotNull
 	@Column(name = "idEmployee")
 	private Long idEmployee;
 	
+	@NotNull
+	@Column(name = "idCustomer")
+	private Long idCustomer;
+	
+	@NotNull
+	@Pattern(regexp = "[a-zA-Z]{5,20}")
 	@Column(name = "typeService")
 	private String typeService;
 	
+	@NotNull
 	@Column(name = "date")
 	private LocalDate date;
 	
+	@NotNull
 	@Column(name = "starTime")
 	private LocalTime starTime;
 	

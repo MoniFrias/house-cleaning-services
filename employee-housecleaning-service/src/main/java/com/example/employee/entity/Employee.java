@@ -64,8 +64,6 @@ public class Employee {
 	@Column(name = "phoneNumber")
 	private Long phoneNumber;
 
-//	@Column(name="appointments")
-//	@ElementCollection(targetClass=Appointment.class)
 	@Transient
 	private List<Appointment> appointments;
 	

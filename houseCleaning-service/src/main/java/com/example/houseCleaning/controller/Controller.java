@@ -57,8 +57,8 @@ public class Controller extends ResourceServerConfigurerAdapter{
 	}
 	
 	@PostMapping(path = "/bookService")
-	public ResponseEntity<Response> bookService(@RequestBody BookService bookService) throws JsonMappingException, JsonProcessingException {
-		Response response = services.bookService(bookService);
+	public ResponseEntity<Response> bookService(@Valid @RequestBody BookService bookService, BindingResult bindingResult) throws JsonMappingException, JsonProcessingException {
+		Response response = services.bookService(bookService,bindingResult);
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 	

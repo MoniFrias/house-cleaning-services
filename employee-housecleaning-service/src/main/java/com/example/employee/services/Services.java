@@ -38,54 +38,10 @@ public class Services {
 	WebClient webClient;
 	@Value("${typeServiceFindByType}")	
 	private String typeServiceFindByType;
+	Pattern patternPhone, patternNss, patternIdCustomer, patternIdEmployee;
+	Matcher matcherPhone, matcherNss, matcherIdCustomer, matcherIdEmployee;
 	
-	Pattern patternPhone, patternNss;
-	Matcher matcherPhone, matcherNss;
 	
-	private boolean validation(Long phoneNumber, String email, Long nss) {
-		patternPhone = Pattern.compile("[0-9]{10}");
-		matcherPhone = patternPhone.matcher(Long.toString(phoneNumber));
-		patternNss = Pattern.compile("[0-9]{8}");
-		matcherNss = patternNss.matcher(Long.toString(nss));
-		if(matcherPhone.matches() && matcherNss.matches() && email.contains(".com")) {
-			return true;
-		}else {
-			return false;
-		}		
-	}
-	
-	private TypeService typeServiceFound(String type) throws JsonProcessingException {
-		Response objectResponse = null;
-		try {
-			objectResponse = webClient.get().uri(typeServiceFindByType+type).retrieve().bodyToMono(Response.class).block();
-		}catch (Exception e) {
-			throw new ValidationException("There aren't type services with that name");
-		}				
-		Object objectType = objectResponse.getData();
-		ObjectMapper objectMapper = new ObjectMapper();
-		String stringResponse = objectMapper.writeValueAsString(objectType);
-		TypeService responseType = objectMapper.readValue(stringResponse, TypeService.class);
-		return responseType;
-	}
-
-	private Employee addAppointment(Employee employee) {
-		List<Appointment> appointments = repositoryAppointment.findAppointmentByIdEmployee(employee.getId());
-		if (appointments.isEmpty()) {
-			employee.setAppointments(new ArrayList<>());
-			return employee;
-		} else {
-			employee.setAppointments(appointments);
-			return employee;
-		}
-	}
-	
-	private List<Employee> addAppointmentListEmployee(List<Employee> listEmployee){
-		listEmployee.stream().map(employee -> {
-			Employee employeeNew = addAppointment(employee);
-			return employeeNew;
-		}).filter(Objects::nonNull).collect(Collectors.toList());
-		return listEmployee;
-	}
 	
 	public Response save(Employee employee, BindingResult validResult) {
 		Response response = new Response();
@@ -103,43 +59,50 @@ public class Services {
 		}
 	}
 	
-	public Response saveAppointment(Appointment appointment) throws JsonProcessingException {
+	public Response saveAppointment(Appointment appointment, BindingResult validResultApp) throws JsonProcessingException {
 		Response response = new Response();
 		long count = 0;
-		TypeService typeServiceFound = typeServiceFound(appointment.getTypeService());
+		boolean validationAppoitment = validationAppointment(appointment);		
 		LocalDate appointmentDate = appointment.getDate();
-		LocalTime appointmentTime = appointment.getStarTime();
-		LocalTime appoitmentEndTime = appointment.getStarTime().plusHours(typeServiceFound.getTimeSuggested());//se calcula con base al ingresado	
+		LocalTime appointmentTime = appointment.getStarTime();		
 		Employee employee = repository.findEmployeeById(appointment.getIdEmployee());
-		if (employee != null) {			
-			if (typeServiceFound != null) {
-				Employee employeeNew = addAppointment(employee);
-				if (employeeNew.getAppointments() != null) {
-					count = employee.getAppointments().parallelStream()
-							.filter(appointmentFilter -> appointmentDate.isEqual(appointmentFilter.getDate())
-									&& !appointmentTime.isBefore(appointmentFilter.getStarTime())
-									&& !appointmentTime.isAfter(appointmentFilter.getEndTime())
-									|| appointmentDate.isEqual(appointmentFilter.getDate()) 
-									&& !appoitmentEndTime.isBefore(appointmentFilter.getStarTime())
-									&& !appoitmentEndTime.isAfter(appointmentFilter.getEndTime())
-									)
-							.count();
-					if (count == 0) {						
+		if (validationAppoitment && !validResultApp.hasErrors()) {
+			if (employee != null) {			
+				TypeService typeServiceFound = typeServiceFound(appointment.getTypeService());
+				LocalTime appoitmentEndTime = appointment.getStarTime().plusHours(typeServiceFound.getTimeSuggested());	
+				if (typeServiceFound != null) {
+					Employee employeeNew = addAppointment(employee);
+					if (employeeNew.getAppointments() != null) {
+						count = employee.getAppointments().parallelStream()
+								.filter(appointmentFilter -> appointmentDate.isEqual(appointmentFilter.getDate())
+										&& !appointmentTime.isBefore(appointmentFilter.getStarTime())
+										&& !appointmentTime.isAfter(appointmentFilter.getEndTime())
+										|| appointmentDate.isEqual(appointmentFilter.getDate()) 
+										&& !appoitmentEndTime.isBefore(appointmentFilter.getStarTime())
+										&& !appoitmentEndTime.isAfter(appointmentFilter.getEndTime())
+										)
+								.count();
+						if (count == 0) {						
+							appointment.setEndTime(appoitmentEndTime);
+							response.setData(repositoryAppointment.save(appointment));
+							return response;
+						} else {
+							throw new ValidationException("That schedule is not available, there is already an appointment");
+						}
+					} else {
 						appointment.setEndTime(appoitmentEndTime);
 						response.setData(repositoryAppointment.save(appointment));
 						return response;
-					} else {
-						throw new ValidationException("That schedule is not available, there is already an appointment");
 					}
-				} else {//Guarda sin validar porque hay disponibilidad
-					appointment.setEndTime(appoitmentEndTime);
-					response.setData(repositoryAppointment.save(appointment));
-					return response;
-				}
-			} 
-		}  
-		throw new ValidationException("There aren't employee with that ID");		
+				} 
+			}  
+			throw new ValidationException("There aren't employee with that ID");	
+		}else {
+			throw new ValidationException("Some values are wrong");	
+		}
 	}
+	
+	
 
 	public Response findAll() {
 		Response response = new Response();
@@ -155,9 +118,7 @@ public class Services {
 		} else {
 			throw new ValidationException("There aren't employees");
 		}
-	}
-
-	
+	}	
 	
 	public Response findById(Long id) {
 		Response response = new Response();
@@ -199,16 +160,7 @@ public class Services {
 	public Response findByPostalCode(String code) {
 		Response response = new Response();
 		List<Employee> listEmployee = repository.findEmployeeByPostalCode(code);
-		if (!listEmployee.isEmpty()) {
-//			
-//			List<Employee> listEmployeeNew = listEmployee.stream().map(employee ->{
-//				List<Appointment> appointments = repositoryAppointment.findAppointmentByIdEmployee(employee.getId());
-//				if (appointments.isEmpty()) {
-//					employee.setAppointments(new ArrayList<>());
-//				}
-//				employee.setAppointments(appointments);
-//				return employee;
-//			}).filter(Objects::nonNull).collect(Collectors.toList());	
+		if (!listEmployee.isEmpty()) {	
 			List<Employee> listEmployeeNew = addAppointmentListEmployee(listEmployee);			
 			response.setData(listEmployeeNew);
 			return response;
@@ -262,6 +214,65 @@ public class Services {
 		}
 	}
 
+	
+	private boolean validation(Long phoneNumber, String email, Long nss) {
+		patternPhone = Pattern.compile("[0-9]{10}");
+		matcherPhone = patternPhone.matcher(Long.toString(phoneNumber));
+		patternNss = Pattern.compile("[0-9]{8}");
+		matcherNss = patternNss.matcher(Long.toString(nss));
+		if(matcherPhone.matches() && matcherNss.matches() && email.contains(".com")) {
+			return true;
+		}else {
+			return false;
+		}		
+	} 
+	
+	private boolean validationAppointment(Appointment appoitment) {
+		patternIdCustomer = Pattern.compile("[0-9]{1,5}");
+		matcherIdCustomer = patternIdCustomer.matcher(Long.toString(appoitment.getIdCustomer()));
+		patternIdEmployee = Pattern.compile("[0-9]{1,5}");
+		matcherIdEmployee = patternIdEmployee.matcher(Long.toString(appoitment.getIdEmployee()));
+		if (matcherIdCustomer.matches() && matcherIdEmployee.matches() && appoitment.getDate().isAfter(LocalDate.now())) {
+			return true;
+		}else {
+			return false;
+		}
+	}
+	
+	private TypeService typeServiceFound(String type) throws JsonProcessingException {
+		Response objectResponse = null;
+		try {
+			objectResponse = webClient.get().uri(typeServiceFindByType+type).retrieve().bodyToMono(Response.class).block();
+		}catch (Exception e) {
+			throw new ValidationException("There aren't type services with that name");
+		}				
+		Object objectType = objectResponse.getData();
+		ObjectMapper objectMapper = new ObjectMapper();
+		String stringResponse = objectMapper.writeValueAsString(objectType);
+		TypeService responseType = objectMapper.readValue(stringResponse, TypeService.class);
+		return responseType;
+	}
+
+	private Employee addAppointment(Employee employee) {
+		List<Appointment> appointments = repositoryAppointment.findAppointmentByIdEmployee(employee.getId());
+		if (appointments.isEmpty()) {
+			employee.setAppointments(new ArrayList<>());
+			return employee;
+		} else {
+			employee.setAppointments(appointments);
+			return employee;
+		}
+	}
+	
+	private List<Employee> addAppointmentListEmployee(List<Employee> listEmployee){
+		listEmployee.stream().map(employee -> {
+			Employee employeeNew = addAppointment(employee);
+			return employeeNew;
+		}).filter(Objects::nonNull).collect(Collectors.toList());
+		return listEmployee;
+	}
+	
+	
 }
 
 
