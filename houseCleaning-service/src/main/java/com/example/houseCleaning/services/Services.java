@@ -2,11 +2,10 @@ package com.example.houseCleaning.services;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.Month;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Random;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -30,7 +29,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -59,8 +57,8 @@ public class Services {
 	@Value("${typeServiceFindByType}")	
 	private String typeServiceFindByType;
 	
-	private Pattern patternCodeP, patternIdCustomer, patternDate;
-	private Matcher matcherCodeP, matcherIdCustomer, matcherDate;
+	private Pattern patternCodeP, patternIdCustomer;
+	private Matcher matcherCodeP, matcherIdCustomer;
 	
 	
 	public Response createAccountCustomer(Customer customer) {
@@ -106,7 +104,7 @@ public class Services {
 		List<Employee> listEmployee;
 		final LocalDate dateBook = bookService.getDate();
 		LocalTime appointmentTime = bookService.getStarTime();
-		boolean validationResult = validatePhoneNumberAndEmail(bookService.getIdCustomer(), bookService.getCodeP(), dateBook);
+		boolean validationResult = validateData(bookService.getIdCustomer(), bookService.getCodeP(), dateBook, appointmentTime);
 		
 		if (validationResult && !bindingResult.hasErrors()) {
 			TypeService typeServiceFound = typeServiceFindByType(bookService.getTypeService());			
@@ -143,10 +141,6 @@ public class Services {
 					Long costTotal = typeServiceFound.getCost() - (new Double(descount)).longValue();
 					customerUpdateCountService(bookService.getIdCustomer(), 1L);
 					bookService.setCost(costTotal);
-//					bookService.setIdEmployee(employee.getId());
-//					Appointment appoitmentValues = setValuesAppointment(bookService);
-//					appoitmentValues.setEndTime(appoitmentEndTime);
-//					employeeSaveAppointment(appoitmentValues);
 					BookService bookServiceNew = setValuesBookService(bookService, employee, appoitmentEndTime);
 					response.setData(repository.save(bookServiceNew));
 					return response;
@@ -154,10 +148,6 @@ public class Services {
 					Long countNew = customerStatus.getCountService() + 1L;
 					customerUpdateCountService(bookService.getIdCustomer(), countNew);						
 					bookService.setCost(typeServiceFound.getCost()); 
-//					bookService.setIdEmployee(employee.getId());
-//					Appointment appoitmentValues = setValuesAppointment(bookService);
-//					appoitmentValues.setEndTime(appoitmentEndTime);
-//					employeeSaveAppointment(appoitmentValues);
 					BookService bookServiceNew = setValuesBookService(bookService, employee, appoitmentEndTime);
 					response.setData(repository.save(bookServiceNew));
 					return response;
@@ -166,13 +156,24 @@ public class Services {
 				throw new ValidationException("No employees available");
 			}
 		}else {
-			throw new ValidationException("Some data is wrong");
+			throw new ValidationException("Some data is wrong or the day and time are out of schedule");
 		}
 	}
 	
 	private BookService setValuesBookService(BookService bookService, Employee employee, LocalTime appoitmentEndTime) {
+		int month = LocalDate.now().getMonthValue();
+		int year = LocalDate.now().getYear();
+		int day = LocalDate.now().getDayOfMonth();
+		int hour = LocalTime.now().getHour();
+		int minute = LocalTime.now().getMinute();
+		int second = LocalTime.now().getSecond();
+		Long number = Long.valueOf(String.valueOf(year) + String.valueOf(month) + String.valueOf(day) 
+								+ String.valueOf(hour) + String.valueOf(minute) + String.valueOf(second) 
+								+ String.valueOf(bookService.getIdCustomer()));		
 		bookService.setIdEmployee(employee.getId());
 		bookService.setStatusPay("In process");
+		bookService.setEndTime(appoitmentEndTime);
+		bookService.setBookNumber(number);
 		Appointment appoitmentValues = setValuesAppointment(bookService);
 		appoitmentValues.setEndTime(appoitmentEndTime);
 		appoitmentValues.setIdCustomer(bookService.getIdCustomer());
@@ -181,16 +182,18 @@ public class Services {
 	}
 	
 	public Response validatePay(BookService bookService) {
-		// TODO Auto-generated method stub
+		
 		return null;
 	}
 	
-	private boolean validatePhoneNumberAndEmail(Long idCustomer, Long codeP, LocalDate date) {
+	private boolean validateData(Long idCustomer, Long codeP, LocalDate date, LocalTime time) {
 		patternIdCustomer = Pattern.compile("[0-9]{1,5}");
 		matcherIdCustomer = patternIdCustomer.matcher(Long.toString(idCustomer));
 		patternCodeP = Pattern.compile("[0-9]{5}");
 		matcherCodeP = patternCodeP.matcher(Long.toString(codeP));
-		if(matcherCodeP.matches() && matcherIdCustomer.matches() && date.isAfter(LocalDate.now())) {
+		LocalTime isbeforeTime = LocalTime.parse("07:00");
+		LocalTime isAfterTime = LocalTime.parse("19:59");
+		if(matcherCodeP.matches() && matcherIdCustomer.matches() && date.isAfter(LocalDate.now()) && !time.isBefore(isbeforeTime) && !time.isAfter(isAfterTime)) {
 			return true;
 		}else {
 			return false;

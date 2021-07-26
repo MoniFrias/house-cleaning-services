@@ -232,7 +232,10 @@ public class Services {
 		matcherIdCustomer = patternIdCustomer.matcher(Long.toString(appoitment.getIdCustomer()));
 		patternIdEmployee = Pattern.compile("[0-9]{1,5}");
 		matcherIdEmployee = patternIdEmployee.matcher(Long.toString(appoitment.getIdEmployee()));
-		if (matcherIdCustomer.matches() && matcherIdEmployee.matches() && appoitment.getDate().isAfter(LocalDate.now())) {
+		LocalTime time  = appoitment.getStarTime();
+		LocalTime isbeforeTime = LocalTime.parse("07:00");
+		LocalTime isAfterTime = LocalTime.parse("19:59");
+		if (matcherIdCustomer.matches() && matcherIdEmployee.matches() && appoitment.getDate().isAfter(LocalDate.now()) & !time.isBefore(isbeforeTime) && !time.isAfter(isAfterTime)) {
 			return true;
 		}else {
 			return false;
