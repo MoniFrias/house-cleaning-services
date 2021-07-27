@@ -1,7 +1,6 @@
 package com.example.houseCleaning.controller;
 
 import javax.validation.Valid;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -9,9 +8,13 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.oauth2.config.annotation.web.configuration.EnableResourceServer;
 import org.springframework.security.oauth2.config.annotation.web.configuration.ResourceServerConfigurerAdapter;
 import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -64,6 +67,36 @@ public class Controller extends ResourceServerConfigurerAdapter{
 	@PostMapping(path = "/validatePay")
 	public ResponseEntity<Response> validatePay(@RequestBody BookService bookService) throws JsonMappingException, JsonProcessingException {
 		Response response = services.validatePay(bookService);
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+	
+	@GetMapping(path = "/findAll")
+	public ResponseEntity<Response> findAll(){
+		Response response = services.findAll();
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+	
+	@GetMapping(path = "/findByCustomerId")
+	public ResponseEntity<Response> findByCustomerId(@RequestHeader(name = "id") Long id){
+		Response response = services.findByCustomerId(id);
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+	
+	@GetMapping(path = "/findByBookNumber")
+	public ResponseEntity<Response> findByBookNumber(@RequestParam(name = "number") Long number){
+		Response response = services.findByBookNumber(number);
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+	
+	@PutMapping(path = "/update/{id}")
+	public ResponseEntity<Response> update(@Valid @RequestBody BookService bookservice, @PathVariable Long id, BindingResult validResultUpdate){
+		Response response = services.update(bookservice,id,validResultUpdate);
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+	
+	@DeleteMapping(path = "/deleteByBookNumber")
+	public ResponseEntity<Response> deleteByBookNumber(@RequestParam(name = "number") Long number){
+		Response response = services.deleteByBookNumber(number);
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 

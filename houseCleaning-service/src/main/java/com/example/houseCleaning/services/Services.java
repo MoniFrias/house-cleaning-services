@@ -9,6 +9,8 @@ import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.validation.Valid;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -57,8 +59,8 @@ public class Services {
 	@Value("${typeServiceFindByType}")	
 	private String typeServiceFindByType;
 	
-	private Pattern patternCodeP, patternIdCustomer;
-	private Matcher matcherCodeP, matcherIdCustomer;
+	private Pattern patternCodeP, patternIdCustomer, patternCard, patternBookNumber;
+	private Matcher matcherCodeP, matcherIdCustomer, matcherCard, matcherBookNumber;
 	
 	
 	public Response createAccountCustomer(Customer customer) {
@@ -181,9 +183,22 @@ public class Services {
 		return bookService;
 	}
 	
-	public Response validatePay(BookService bookService) {
-		
-		return null;
+	public Response validatePay(BookService bookService) throws JsonMappingException, JsonProcessingException {
+		Response response = new Response();
+		patternCard = Pattern.compile("[0-9]{16}");
+		matcherCard = patternCard.matcher(Long.toString(bookService.getCreditCard()));
+		if (matcherCard.matches()) {
+			BookService bookServiceFound = repository.findBookServiceBybookNumber(bookService.getBookNumber());
+			if (bookServiceFound != null) {
+				bookServiceFound.setStatusPay("Paid");
+				response.setData(repository.save(bookServiceFound));
+				return response;
+			}else {
+				throw new ValidationException("There aren't bookService with that bookNumber");
+			}
+		}else {
+			throw new ValidationException("Number introduce is wrong");
+		}
 	}
 	
 	private boolean validateData(Long idCustomer, Long codeP, LocalDate date, LocalTime time) {
@@ -313,6 +328,80 @@ public class Services {
 		return appointment;
 		
 	}
+
+	public Response findAll() {
+		Response response = new Response();
+		List<BookService> listBookService = repository.findAll();
+		if (!listBookService.isEmpty()) {
+			response.setData(listBookService);
+			return response;
+		}else {
+			throw new ValidationException("There aren't bookService");
+		}
+	}
+
+	public Response findByCustomerId(Long id) {
+		Response response = new Response();
+		BookService bookSeviceFound  =repository.findBookServiceByIdCustomer(id);
+		if (id != null && id > 0) {
+			if (bookSeviceFound != null) {
+				response.setData(bookSeviceFound);
+				return response;
+			}else {
+				throw new ValidationException("There aren't bookService for that Customer");
+			}
+		}else {
+			throw new ValidationException("Id can't be null or zero");
+		}
+	}
+
+	private boolean validateBookNumber(Long number) {
+		patternBookNumber = Pattern.compile("[0-9]{12,14}");
+		matcherBookNumber = patternBookNumber.matcher(Long.toString(number));
+		if (matcherBookNumber.matches()) {
+			return true;
+		}else {
+			return false;
+		}		
+	}
+	
+	public Response findByBookNumber(Long number) {
+		Response response = new Response();
+		BookService bookSeviceFound  =repository.findBookServiceBybookNumber(number);
+		boolean validationNumber = validateBookNumber(number);
+		if (validationNumber) {
+			if (bookSeviceFound != null) {
+				response.setData(bookSeviceFound);
+				return response;
+			}else {
+				throw new ValidationException("There aren't bookService for that Customer");
+			}
+		}else {
+			throw new ValidationException("Some data is wrong");
+		}
+	}
+
+	public Response update(@Valid BookService bookservice, Long id, BindingResult validResultUpdate) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public Response deleteByBookNumber(Long number) {
+		Response response = new Response();
+		BookService bookSeviceFound  =repository.findBookServiceBybookNumber(number);
+		boolean validationNumber = validateBookNumber(number);
+		if (validationNumber) {
+			if (bookSeviceFound != null) {
+				repository.deleteById(bookSeviceFound.getId());
+				return response;
+			}else {
+				throw new ValidationException("There aren't bookService for that bookNumber");
+			}
+		}else {
+			throw new ValidationException("Some data is wrong");
+		}
+	}
+
 
 	
 	

@@ -8,4 +8,9 @@ import com.example.houseCleaning.entity.BookService;
 @Repository
 public interface RepositoryBook extends JpaRepository<BookService, Long>{
 
+	BookService findBookServiceBybookNumber(Long bookNumber);
+
+	BookService findBookServiceByIdCustomer(Long id);
+	
+
 }
