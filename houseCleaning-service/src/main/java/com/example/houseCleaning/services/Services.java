@@ -1,5 +1,6 @@
 package com.example.houseCleaning.services;
 
+import java.awt.print.Book;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.Month;
@@ -105,61 +106,232 @@ public class Services {
 		Response response = new Response();
 		List<Employee> listEmployee;
 		final LocalDate dateBook = bookService.getDate();
-		LocalTime appointmentTime = bookService.getStarTime();
-		boolean validationResult = validateData(bookService.getIdCustomer(), bookService.getCodeP(), dateBook, appointmentTime);
+		LocalTime appointmentstartTime = bookService.getStarTime();
+		boolean validationResult = validateData(bookService.getIdCustomer(), bookService.getCodeP(), dateBook, appointmentstartTime);
 		
 		if (validationResult && !bindingResult.hasErrors()) {
 			TypeService typeServiceFound = typeServiceFindByType(bookService.getTypeService());			
 			LocalTime appoitmentEndTime = bookService.getStarTime().plusHours(typeServiceFound.getTimeSuggested());
-			
-			try {
-				listEmployee = employeeFindByPostalCode(bookService.getCodeP());
-			} catch (JsonProcessingException e) {
-				log.error("error {}", e);
-				throw new ValidationException(e.getMessage());
-			}
-
-			Optional<Employee> employeeA = listEmployee.stream().map(employee -> {
-				long count = 0;
-				if (employee.getAppointments() != null) {
-					count = employee.getAppointments().parallelStream()
-							.filter(appointment -> dateBook.isEqual(appointment.getDate())
-							&& !appointmentTime.isBefore(appointment.getStarTime())
-							&& !appointmentTime.isAfter(appointment.getEndTime())
-							|| dateBook.isEqual(appointment.getDate())
-									&& !appoitmentEndTime.isBefore(appointment.getStarTime())
-									&& !appoitmentEndTime.isAfter(appointment.getEndTime()))
-							.count();
+			boolean validateDateTime = validateLocalDateTime(dateBook, appointmentstartTime, appoitmentEndTime);
+			if (validateDateTime) {
+				try {
+					listEmployee = employeeFindByPostalCode(bookService.getCodeP());
+				} catch (JsonProcessingException e) {
+					log.error("error {}", e);
+					throw new ValidationException(e.getMessage());
 				}
-				return (count > 0) ? null : employee;
-			}).filter(Objects::nonNull).findFirst();
 
-			if (employeeA.isPresent()) {
-				Employee employee = employeeA.get();
-				Customer customerStatus = customerFindById(bookService.getIdCustomer());
+				Optional<Employee> employeeValidation = validateAvaliable(listEmployee, dateBook, appointmentstartTime,appoitmentEndTime);
 
-				if (customerStatus.getCountService() == 0) {
-					double descount = typeServiceFound.getCost() * (0.2);
-					Long costTotal = typeServiceFound.getCost() - (new Double(descount)).longValue();
-					customerUpdateCountService(bookService.getIdCustomer(), 1L);
-					bookService.setCost(costTotal);
-					BookService bookServiceNew = setValuesBookService(bookService, employee, appoitmentEndTime);
-					response.setData(repository.save(bookServiceNew));
-					return response;
+				if (employeeValidation.isPresent()) {
+					Employee employee = employeeValidation.get();
+					Customer customerStatus = customerFindById(bookService.getIdCustomer());
+
+					if (customerStatus.getCountService() == 0) {
+						double descount = typeServiceFound.getCost() * (0.2);
+						Long costTotal = typeServiceFound.getCost() - (new Double(descount)).longValue();
+						customerUpdateCountService(bookService.getIdCustomer(), 1L);
+						bookService.setCost(costTotal);
+						BookService bookServiceNew = setValuesBookService(bookService, employee, appoitmentEndTime);
+						response.setData(repository.save(bookServiceNew));
+						return response;
+					} else {
+						Long countNew = customerStatus.getCountService() + 1L;
+						customerUpdateCountService(bookService.getIdCustomer(), countNew);						
+						bookService.setCost(typeServiceFound.getCost()); 
+						BookService bookServiceNew = setValuesBookService(bookService, employee, appoitmentEndTime);
+						response.setData(repository.save(bookServiceNew));
+						return response;
+					}
 				} else {
-					Long countNew = customerStatus.getCountService() + 1L;
-					customerUpdateCountService(bookService.getIdCustomer(), countNew);						
-					bookService.setCost(typeServiceFound.getCost()); 
-					BookService bookServiceNew = setValuesBookService(bookService, employee, appoitmentEndTime);
-					response.setData(repository.save(bookServiceNew));
-					return response;
+					throw new ValidationException("No employees available");
 				}
-			} else {
-				throw new ValidationException("No employees available");
+			}else {
+				throw new ValidationException("Out of schedule");
 			}
+			
 		}else {
 			throw new ValidationException("Some data is wrong or the day and time are out of schedule");
 		}
+	}
+		
+	public Response validatePay(BookService bookService) throws JsonMappingException, JsonProcessingException {
+		Response response = new Response();
+		patternCard = Pattern.compile("[0-9]{16}");
+		matcherCard = patternCard.matcher(Long.toString(bookService.getCreditCard()));
+		if (matcherCard.matches()) {
+			BookService bookServiceFound = repository.findBookServiceBybookNumber(bookService.getBookNumber());
+			if (bookServiceFound != null) {
+				bookServiceFound.setStatusPay("Paid");
+				response.setData(repository.save(bookServiceFound));
+				return response;
+			}else {
+				throw new ValidationException("There aren't bookService with that bookNumber");
+			}
+		}else {
+			throw new ValidationException("Number introduce is wrong");
+		}
+	}
+	
+	public Response findAll() {
+		Response response = new Response();
+		List<BookService> listBookService = repository.findAll();
+		if (!listBookService.isEmpty()) {
+			response.setData(listBookService);
+			return response;
+		}else {
+			throw new ValidationException("There aren't bookService");
+		}
+	}
+
+	public Response findByCustomerId(Long id) {
+		Response response = new Response();
+		BookService bookSeviceFound  =repository.findBookServiceByIdCustomer(id);
+		if (id != null && id > 0) {
+			if (bookSeviceFound != null) {
+				response.setData(bookSeviceFound);
+				return response;
+			}else {
+				throw new ValidationException("There aren't bookService for that Customer");
+			}
+		}else {
+			throw new ValidationException("Id can't be null or zero");
+		}
+	}
+
+	public Response findByBookNumber(Long number) {
+		Response response = new Response();
+		BookService bookSeviceFound  =repository.findBookServiceBybookNumber(number);
+		boolean validationNumber = validateBookNumber(number);
+		if (validationNumber) {
+			if (bookSeviceFound != null) {
+				response.setData(bookSeviceFound);
+				return response;
+			}else {
+				throw new ValidationException("There aren't bookService for that Customer");
+			}
+		}else {
+			throw new ValidationException("Some data is wrong");
+		}
+	}
+	
+	public Response update(BookService bookService, Long number, BindingResult validResultUpdate) throws JsonProcessingException {
+		Response response = new Response();
+		List<Employee> listEmployee;
+		boolean validation = validateData(bookService.getIdCustomer(), bookService.getCodeP(), bookService.getDate(), bookService.getStarTime());
+		BookService bookSeviceFound = repository.findBookServiceBybookNumber(number);
+		final LocalDate dateBook = bookService.getDate();
+		LocalTime appointmentstartTime = bookService.getStarTime();
+		if (validation && !validResultUpdate.hasErrors()) {
+			if (bookSeviceFound != null) {
+				TypeService typeServiceFound = typeServiceFindByType(bookService.getTypeService());
+				LocalTime appoitmentEndTime = bookService.getStarTime().plusHours(typeServiceFound.getTimeSuggested());
+				boolean validateDateTime = validateLocalDateTime(dateBook, appointmentstartTime, appoitmentEndTime);
+				if (validateDateTime) {
+					try {
+						listEmployee = employeeFindByPostalCode(bookService.getCodeP());
+					} catch (JsonProcessingException e) {
+						log.error("error {}", e);
+						throw new ValidationException(e.getMessage());
+					}
+
+					Optional<Employee> employeeValidation = validateAvaliable(listEmployee, dateBook, appointmentstartTime,
+							appoitmentEndTime);
+
+					if (employeeValidation.isPresent()) {
+						Employee employee = employeeValidation.get();
+						Customer customerStatus = customerFindById(bookService.getIdCustomer());
+
+						if (customerStatus.getCountService() == 0) {
+							double descount = typeServiceFound.getCost() * (0.2);
+							Long costTotal = typeServiceFound.getCost() - (new Double(descount)).longValue();
+							customerUpdateCountService(bookService.getIdCustomer(), 1L);
+							bookService.setCost(costTotal);
+							BookService bookServiceNew = setValuesBookService(bookService, employee, appoitmentEndTime);
+							response.setData(repository.save(bookServiceNew));
+							return response;
+						} else {
+							Long countNew = customerStatus.getCountService() + 1L;
+							customerUpdateCountService(bookService.getIdCustomer(), countNew);
+							bookService.setCost(typeServiceFound.getCost());
+							BookService bookServiceNew = setValuesBookService(bookService, employee, appoitmentEndTime);
+							response.setData(repository.save(bookServiceNew));
+							return response;
+						}
+					} else {
+						throw new ValidationException("No employees available");
+					}
+
+				} else {
+					throw new ValidationException("Out of schedule");
+				}
+
+			} else {
+				throw new ValidationException("There aren't bookService for that bookNumber");
+			}
+		} else {
+			throw new ValidationException("Some data is wrong");
+		}
+
+	}
+
+	public Response deleteByBookNumber(Long number) {
+		Response response = new Response();
+		BookService bookSeviceFound  =repository.findBookServiceBybookNumber(number);
+		boolean validationNumber = validateBookNumber(number);
+		if (validationNumber) {
+			if (bookSeviceFound != null) {
+				repository.deleteById(bookSeviceFound.getId());
+				return response;
+			}else {
+				throw new ValidationException("There aren't bookService for that bookNumber");
+			}
+		}else {
+			throw new ValidationException("Some data is wrong");
+		}
+	}
+	
+	private boolean validateLocalDateTime(LocalDate date, LocalTime startTime, LocalTime endTime) {
+		LocalTime isbeforeTime = LocalTime.parse("07:00");
+		LocalTime isAfterTime = LocalTime.parse("19:59");
+		if(date.isAfter(LocalDate.now()) && !startTime.isBefore(isbeforeTime) && !startTime.isAfter(isAfterTime) &&
+				!endTime.isBefore(isbeforeTime) && !endTime.isAfter(isAfterTime)) {
+			return true;
+		}else {
+			return false;
+		}
+	}
+	
+	private boolean validateData(Long idCustomer, Long codeP, LocalDate date, LocalTime time) {
+		patternIdCustomer = Pattern.compile("[0-9]{1,5}");
+		matcherIdCustomer = patternIdCustomer.matcher(Long.toString(idCustomer));
+		patternCodeP = Pattern.compile("[0-9]{5}");
+		matcherCodeP = patternCodeP.matcher(Long.toString(codeP));		
+		if(matcherCodeP.matches() && matcherIdCustomer.matches()) {
+			return true;
+		}else {
+			return false;
+		}
+	}
+	
+	private Optional<Employee> validateAvaliable(List<Employee> listEmployee, LocalDate dateBook,
+			LocalTime appointmentTime, LocalTime appoitmentEndTime) {
+		Optional<Employee> employeeA = listEmployee.stream().map(employee -> {
+			long count = 0;
+			if (employee.getAppointments() != null) {
+				count = employee.getAppointments().parallelStream()
+						.filter(appointment -> dateBook.isEqual(appointment.getDate())
+						&& !appointmentTime.isBefore(appointment.getStarTime())
+						&& !appointmentTime.isAfter(appointment.getEndTime())
+						|| dateBook.isEqual(appointment.getDate())
+								&& !appoitmentEndTime.isBefore(appointment.getStarTime())
+								&& !appoitmentEndTime.isAfter(appointment.getEndTime()))
+						.count();
+			}
+			return (count > 0) ? null : employee;
+		}).filter(Objects::nonNull).findFirst();
+		
+		return employeeA;
 	}
 	
 	private BookService setValuesBookService(BookService bookService, Employee employee, LocalTime appoitmentEndTime) {
@@ -181,38 +353,6 @@ public class Services {
 		appoitmentValues.setIdCustomer(bookService.getIdCustomer());
 		employeeSaveAppointment(appoitmentValues);
 		return bookService;
-	}
-	
-	public Response validatePay(BookService bookService) throws JsonMappingException, JsonProcessingException {
-		Response response = new Response();
-		patternCard = Pattern.compile("[0-9]{16}");
-		matcherCard = patternCard.matcher(Long.toString(bookService.getCreditCard()));
-		if (matcherCard.matches()) {
-			BookService bookServiceFound = repository.findBookServiceBybookNumber(bookService.getBookNumber());
-			if (bookServiceFound != null) {
-				bookServiceFound.setStatusPay("Paid");
-				response.setData(repository.save(bookServiceFound));
-				return response;
-			}else {
-				throw new ValidationException("There aren't bookService with that bookNumber");
-			}
-		}else {
-			throw new ValidationException("Number introduce is wrong");
-		}
-	}
-	
-	private boolean validateData(Long idCustomer, Long codeP, LocalDate date, LocalTime time) {
-		patternIdCustomer = Pattern.compile("[0-9]{1,5}");
-		matcherIdCustomer = patternIdCustomer.matcher(Long.toString(idCustomer));
-		patternCodeP = Pattern.compile("[0-9]{5}");
-		matcherCodeP = patternCodeP.matcher(Long.toString(codeP));
-		LocalTime isbeforeTime = LocalTime.parse("07:00");
-		LocalTime isAfterTime = LocalTime.parse("19:59");
-		if(matcherCodeP.matches() && matcherIdCustomer.matches() && date.isAfter(LocalDate.now()) && !time.isBefore(isbeforeTime) && !time.isAfter(isAfterTime)) {
-			return true;
-		}else {
-			return false;
-		}
 	}
 	
 	private Customer saveCustomer(Customer customer) throws JsonMappingException, JsonProcessingException {
@@ -325,36 +465,9 @@ public class Services {
 		appointment.setTypeService(bookService.getTypeService());
 		appointment.setDate(bookService.getDate());
 		appointment.setStarTime(bookService.getStarTime());
-		return appointment;
-		
+		return appointment;		
 	}
-
-	public Response findAll() {
-		Response response = new Response();
-		List<BookService> listBookService = repository.findAll();
-		if (!listBookService.isEmpty()) {
-			response.setData(listBookService);
-			return response;
-		}else {
-			throw new ValidationException("There aren't bookService");
-		}
-	}
-
-	public Response findByCustomerId(Long id) {
-		Response response = new Response();
-		BookService bookSeviceFound  =repository.findBookServiceByIdCustomer(id);
-		if (id != null && id > 0) {
-			if (bookSeviceFound != null) {
-				response.setData(bookSeviceFound);
-				return response;
-			}else {
-				throw new ValidationException("There aren't bookService for that Customer");
-			}
-		}else {
-			throw new ValidationException("Id can't be null or zero");
-		}
-	}
-
+	
 	private boolean validateBookNumber(Long number) {
 		patternBookNumber = Pattern.compile("[0-9]{12,14}");
 		matcherBookNumber = patternBookNumber.matcher(Long.toString(number));
@@ -365,49 +478,12 @@ public class Services {
 		}		
 	}
 	
-	public Response findByBookNumber(Long number) {
-		Response response = new Response();
-		BookService bookSeviceFound  =repository.findBookServiceBybookNumber(number);
-		boolean validationNumber = validateBookNumber(number);
-		if (validationNumber) {
-			if (bookSeviceFound != null) {
-				response.setData(bookSeviceFound);
-				return response;
-			}else {
-				throw new ValidationException("There aren't bookService for that Customer");
-			}
-		}else {
-			throw new ValidationException("Some data is wrong");
-		}
+	private BookService setValuesUpdate(BookService bookSeviceFound, BookService bookSevice) {
+		bookSeviceFound.setCodeP(bookSevice.getCodeP());
+		bookSeviceFound.setTypeService(bookSevice.getTypeService());
+		bookSeviceFound.setDate(bookSevice.getDate());
+		bookSeviceFound.setStarTime(bookSevice.getStarTime());
+		return bookSeviceFound;
 	}
-
-	public Response update(@Valid BookService bookservice, Long id, BindingResult validResultUpdate) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	public Response deleteByBookNumber(Long number) {
-		Response response = new Response();
-		BookService bookSeviceFound  =repository.findBookServiceBybookNumber(number);
-		boolean validationNumber = validateBookNumber(number);
-		if (validationNumber) {
-			if (bookSeviceFound != null) {
-				repository.deleteById(bookSeviceFound.getId());
-				return response;
-			}else {
-				throw new ValidationException("There aren't bookService for that bookNumber");
-			}
-		}else {
-			throw new ValidationException("Some data is wrong");
-		}
-	}
-
-
-	
-	
-	
-
-
-	
 
 }
