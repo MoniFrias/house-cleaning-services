@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.customer.entity.Customer;
 import com.example.customer.entity.Response;
 import com.example.customer.services.Services;
+import com.fasterxml.jackson.core.JsonProcessingException;
 
 
 @RestController
@@ -42,7 +43,7 @@ public class Controller {
 	}
 	
 	@GetMapping(path = "/findById")
-	public ResponseEntity<Response> findById(@RequestParam(name = "id") Long id){
+	public ResponseEntity<Response> findById(@RequestParam(name = "id") Long id) throws JsonProcessingException{
 		Response response = services.findById(id);
 		return new ResponseEntity<>(response,HttpStatus.FOUND);
 	}

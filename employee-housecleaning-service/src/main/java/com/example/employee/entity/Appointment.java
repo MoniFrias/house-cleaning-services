@@ -24,6 +24,9 @@ public class Appointment {
 	@GeneratedValue
 	private Long id;
 	
+	@Column(name = "bookNumber")
+	private Long bookNumber;
+	
 	@NotNull
 	@Column(name = "idEmployee")
 	private Long idEmployee;

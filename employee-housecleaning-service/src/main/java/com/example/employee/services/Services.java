@@ -64,37 +64,42 @@ public class Services {
 		long count = 0;
 		boolean validationAppoitment = validationAppointment(appointment);		
 		LocalDate appointmentDate = appointment.getDate();
-		LocalTime appointmentTime = appointment.getStarTime();		
+		LocalTime appointmentstartTime = appointment.getStarTime();		
 		Employee employee = repository.findEmployeeById(appointment.getIdEmployee());
 		if (validationAppoitment && !validResultApp.hasErrors()) {
 			if (employee != null) {			
 				TypeService typeServiceFound = typeServiceFound(appointment.getTypeService());
 				LocalTime appoitmentEndTime = appointment.getStarTime().plusHours(typeServiceFound.getTimeSuggested());	
-				if (typeServiceFound != null) {
-					Employee employeeNew = addAppointment(employee);
-					if (employeeNew.getAppointments() != null) {
-						count = employee.getAppointments().parallelStream()
-								.filter(appointmentFilter -> appointmentDate.isEqual(appointmentFilter.getDate())
-										&& !appointmentTime.isBefore(appointmentFilter.getStarTime())
-										&& !appointmentTime.isAfter(appointmentFilter.getEndTime())
-										|| appointmentDate.isEqual(appointmentFilter.getDate()) 
-										&& !appoitmentEndTime.isBefore(appointmentFilter.getStarTime())
-										&& !appoitmentEndTime.isAfter(appointmentFilter.getEndTime())
-										)
-								.count();
-						if (count == 0) {						
+				boolean validateDateTime = validateLocalDateTime(appointmentDate, appointmentstartTime, appoitmentEndTime);
+				if (validateDateTime) {
+					if (typeServiceFound != null) {
+						Employee employeeNew = addAppointment(employee);
+						if (employeeNew.getAppointments() != null) {
+							count = employee.getAppointments().parallelStream()
+									.filter(appointmentFilter -> appointmentDate.isEqual(appointmentFilter.getDate())
+											&& !appointmentstartTime.isBefore(appointmentFilter.getStarTime())
+											&& !appointmentstartTime.isAfter(appointmentFilter.getEndTime())
+											|| appointmentDate.isEqual(appointmentFilter.getDate()) 
+											&& !appoitmentEndTime.isBefore(appointmentFilter.getStarTime())
+											&& !appoitmentEndTime.isAfter(appointmentFilter.getEndTime())
+											)
+									.count();
+							if (count == 0) {						
+								appointment.setEndTime(appoitmentEndTime);
+								response.setData(repositoryAppointment.save(appointment));
+								return response;
+							} else {
+								throw new ValidationException("That schedule is not available, there is already an appointment");
+							}
+						} else {
 							appointment.setEndTime(appoitmentEndTime);
 							response.setData(repositoryAppointment.save(appointment));
 							return response;
-						} else {
-							throw new ValidationException("That schedule is not available, there is already an appointment");
 						}
-					} else {
-						appointment.setEndTime(appoitmentEndTime);
-						response.setData(repositoryAppointment.save(appointment));
-						return response;
-					}
-				} 
+					} 
+				}else {
+					throw new ValidationException("Out of schedule");
+				}
 			}  
 			throw new ValidationException("There aren't employee with that ID");	
 		}else {
@@ -178,6 +183,17 @@ public class Services {
 		employeeFound.setPhoneNumber(employee.getPhoneNumber());
 		return employeeFound;
 	}
+	
+	private boolean validateLocalDateTime(LocalDate date, LocalTime startTime, LocalTime endTime) {
+		LocalTime isbeforeTime = LocalTime.parse("07:00");
+		LocalTime isAfterTime = LocalTime.parse("19:59");
+		if(date.isAfter(LocalDate.now()) && !startTime.isBefore(isbeforeTime) && !startTime.isAfter(isAfterTime) &&
+				!endTime.isBefore(isbeforeTime) && !endTime.isAfter(isAfterTime)) {
+			return true;
+		}else {
+			return false;
+		}
+	}
 
 	public Response update(Employee employee, Long id, BindingResult validResult) {
 		Response response = new Response();
@@ -232,10 +248,7 @@ public class Services {
 		matcherIdCustomer = patternIdCustomer.matcher(Long.toString(appoitment.getIdCustomer()));
 		patternIdEmployee = Pattern.compile("[0-9]{1,5}");
 		matcherIdEmployee = patternIdEmployee.matcher(Long.toString(appoitment.getIdEmployee()));
-		LocalTime time  = appoitment.getStarTime();
-		LocalTime isbeforeTime = LocalTime.parse("07:00");
-		LocalTime isAfterTime = LocalTime.parse("19:59");
-		if (matcherIdCustomer.matches() && matcherIdEmployee.matches() && appoitment.getDate().isAfter(LocalDate.now()) & !time.isBefore(isbeforeTime) && !time.isAfter(isAfterTime)) {
+		if (matcherIdCustomer.matches() && matcherIdEmployee.matches()) {
 			return true;
 		}else {
 			return false;

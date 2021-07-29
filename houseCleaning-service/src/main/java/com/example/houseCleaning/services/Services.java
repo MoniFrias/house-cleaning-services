@@ -108,12 +108,13 @@ public class Services {
 		final LocalDate dateBook = bookService.getDate();
 		LocalTime appointmentstartTime = bookService.getStarTime();
 		boolean validationResult = validateData(bookService.getIdCustomer(), bookService.getCodeP(), dateBook, appointmentstartTime);
-		
+		Customer customerStatus = customerFindById(bookService.getIdCustomer());
 		if (validationResult && !bindingResult.hasErrors()) {
 			TypeService typeServiceFound = typeServiceFindByType(bookService.getTypeService());			
 			LocalTime appoitmentEndTime = bookService.getStarTime().plusHours(typeServiceFound.getTimeSuggested());
 			boolean validateDateTime = validateLocalDateTime(dateBook, appointmentstartTime, appoitmentEndTime);
 			if (validateDateTime) {
+				
 				try {
 					listEmployee = employeeFindByPostalCode(bookService.getCodeP());
 				} catch (JsonProcessingException e) {
@@ -125,7 +126,7 @@ public class Services {
 
 				if (employeeValidation.isPresent()) {
 					Employee employee = employeeValidation.get();
-					Customer customerStatus = customerFindById(bookService.getIdCustomer());
+					
 
 					if (customerStatus.getCountService() == 0) {
 						double descount = typeServiceFound.getCost() * (0.2);
@@ -465,6 +466,7 @@ public class Services {
 		appointment.setTypeService(bookService.getTypeService());
 		appointment.setDate(bookService.getDate());
 		appointment.setStarTime(bookService.getStarTime());
+		appointment.setBookNumber(bookService.getBookNumber());
 		return appointment;		
 	}
 	

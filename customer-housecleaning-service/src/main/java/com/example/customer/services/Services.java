@@ -5,18 +5,29 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.BindingResult;
+import org.springframework.web.reactive.function.client.WebClient;
+
+import com.example.customer.entity.BookService;
 import com.example.customer.entity.Customer;
 import com.example.customer.entity.Response;
 import com.example.customer.entity.ValidationException;
 import com.example.customer.repository.RepositoryCustomers;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Service
 public class Services {
 	
 	@Autowired
 	RepositoryCustomers repository;
+	@Autowired
+	WebClient webClient;	
+	@Value("${bookServiceFindByIdCustomer}")
+	private String bookServiceFindByIdCustomer;
 	
 	private Pattern pattern;
 	private Matcher matcher;
@@ -29,6 +40,24 @@ public class Services {
 		}else {
 			return false;
 		}
+	}
+	
+	private List<BookService> listBookServiceByCustomer(Long id) throws JsonProcessingException{
+		Response objectResponse = null;
+		try {
+			objectResponse = webClient.get().uri(bookServiceFindByIdCustomer).header("id", id.toString())
+					.retrieve().bodyToMono(Response.class).block();
+		}catch (Exception e) {
+			throw new ValidationException("There aren't bookService for that Customer");
+		}
+		
+		Object objectBookService = objectResponse.getData();
+		ObjectMapper objectMapper = new ObjectMapper();
+		objectMapper.findAndRegisterModules();
+		String stringResponse = objectMapper.writeValueAsString(objectBookService);
+		List<BookService> responseBookService = objectMapper.readValue(stringResponse, new TypeReference<List<BookService>>() {});
+		return responseBookService;
+		
 	}
 
 	public Response save(Customer customer, BindingResult validResult) {
@@ -52,6 +81,7 @@ public class Services {
 		Response response = new Response();
 		List<Customer> listCustomer = repository.findAll();
 		if (!listCustomer.isEmpty()) {
+			
 			response.setData(listCustomer);
 			return response;
 		}else {
@@ -59,7 +89,7 @@ public class Services {
 		}	
 	}
 	
-	public Response findById(Long id) {
+	public Response findById(Long id) throws JsonProcessingException {
 		Response response = new Response();
 		Customer customer = repository.findCustomerById(id);
 		if (customer != null ) {
