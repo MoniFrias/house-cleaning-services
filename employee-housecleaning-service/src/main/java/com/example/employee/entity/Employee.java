@@ -1,9 +1,7 @@
 package com.example.employee.entity;
 
 import java.util.List;
-
 import javax.persistence.Column;
-import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -56,9 +54,8 @@ public class Employee {
 	private String state;
 	
 	@NotNull
-	@Pattern(regexp = "[0-9]{5}")
 	@Column(name = "postalCode")
-	private String postalCode;
+	private Long postalCode;
 	
 	@NotNull
 	@Column(name = "phoneNumber")

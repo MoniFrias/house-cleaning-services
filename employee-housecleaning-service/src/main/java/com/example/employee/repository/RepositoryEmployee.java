@@ -18,6 +18,6 @@ public interface RepositoryEmployee extends JpaRepository<Employee, Long>{
 
 	List<Employee> findEmployeeByState(String state);
 
-	List<Employee> findEmployeeByPostalCode(String code);
+	List<Employee> findEmployeeByPostalCode(Long code);
 
 }
