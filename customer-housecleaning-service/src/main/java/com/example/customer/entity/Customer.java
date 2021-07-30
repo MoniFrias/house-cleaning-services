@@ -1,16 +1,12 @@
 package com.example.customer.entity;
 
-import java.util.List;
-
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.Transient;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
-
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -51,20 +47,19 @@ public class Customer {
 	private String state;
 	
 	@NotNull
-	@Pattern(regexp = "[0-9]{5}")
 	@Column(name = "postalCode")
-	private String postalCode;
+	private Long postalCode;
 	
 	@NotNull
 	@Pattern(regexp = "[a-zA-Z0-9]{5,50}")
 	@Column(name = "address")
 	private String address;
+	
 	@NotNull
 	@Column(name = "phoneNumber")
 	private Long phoneNumber;
 	
 	@Column(name = "countService")
 	private Long countService;
-	
 	
 }

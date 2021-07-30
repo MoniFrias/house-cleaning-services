@@ -47,13 +47,7 @@ public class Controller {
 		Response response = services.findById(id);
 		return new ResponseEntity<>(response,HttpStatus.FOUND);
 	}
-	
-	@GetMapping(path = "/findByState2")
-	public ResponseEntity<Response> findByState2(@RequestParam(name = "state") String state){
-		Response response = services.findByState2(state);
-		return new ResponseEntity<>(response,HttpStatus.FOUND);
-	}
-	
+		
 	@GetMapping(path = "/findByCity")
 	public ResponseEntity<Response> findByCity(@RequestParam(name = "city") String city){
 		Response response = services.findByCity(city);
@@ -63,6 +57,12 @@ public class Controller {
 	@GetMapping(path = "/findByState")
 	public ResponseEntity<Response> findByState(@RequestParam(name = "state") String state){
 		Response response = services.findByState(state);
+		return new ResponseEntity<>(response,HttpStatus.FOUND);
+	}
+
+	@GetMapping(path = "/findByState2")
+	public ResponseEntity<Response> findByState2(@RequestParam(name = "state") String state){
+		Response response = services.findByState2(state);
 		return new ResponseEntity<>(response,HttpStatus.FOUND);
 	}
 	

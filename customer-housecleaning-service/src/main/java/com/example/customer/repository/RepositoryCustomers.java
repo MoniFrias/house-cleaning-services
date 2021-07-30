@@ -23,7 +23,7 @@ public interface RepositoryCustomers extends JpaRepository<Customer, Long>{
 
 	List<Customer> findCustomerByState(String state);
 
-	List<Customer> findCustomerByPostalCode(String code);
+	List<Customer> findCustomerByPostalCode(Long code);
 	
 	@Query(nativeQuery = true, value = "SELECT id,name,state FROM Customer WHERE state =:state")
 	List<Object> findCustomerByStates(String state);
