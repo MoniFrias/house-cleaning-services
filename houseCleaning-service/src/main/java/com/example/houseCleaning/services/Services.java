@@ -1,17 +1,12 @@
 package com.example.houseCleaning.services;
 
-import java.awt.print.Book;
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.time.Month;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import javax.validation.Valid;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -19,7 +14,6 @@ import org.springframework.validation.BindingResult;
 import org.springframework.http.MediaType;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
-
 import com.example.houseCleaning.entity.Appointment;
 import com.example.houseCleaning.entity.BookService;
 import com.example.houseCleaning.entity.Customer;
@@ -59,6 +53,8 @@ public class Services {
 	private String employeeSaveAppointment;
 	@Value("${typeServiceFindByType}")	
 	private String typeServiceFindByType;
+	@Value("${typeServiceSave}")
+	private String typeServiceSave;
 	
 	private Pattern patternCodeP, patternIdCustomer, patternCard, patternBookNumber;
 	private Matcher matcherCodeP, matcherIdCustomer, matcherCard, matcherBookNumber;
@@ -89,6 +85,35 @@ public class Services {
 		}
 		response.setData(employeeFound);
 		return response;
+	}
+	
+	public Response createTypeService(TypeService typeService) {
+		Response response = new Response();
+		TypeService typeServiceSave  = null;
+		try {
+			typeServiceSave = saveTypeService(typeService);
+		} catch (JsonProcessingException e) {
+			log.error("error {}",e);
+			throw new ValidationException(e.getMessage());
+		}
+		response.setData(typeServiceSave);
+		return response;
+	}
+	
+	private TypeService saveTypeService(TypeService typeService) throws JsonMappingException, JsonProcessingException {
+		MediaType contentType = null;
+		Response objectResponse = null;
+		try {
+			objectResponse = webClient.post().uri(typeServiceSave).contentType(contentType.APPLICATION_JSON)
+					.body(BodyInserters.fromValue(typeService)).retrieve().bodyToMono(Response.class).block();
+		} catch (Exception e) {
+			throw new ValidationException("Some data is wrong or already there a Type service with that name");
+		}
+		Object objectTypeService = objectResponse.getData();
+		ObjectMapper objectMapper = new ObjectMapper();
+		String stringResponse = objectMapper.writeValueAsString(objectTypeService);
+		TypeService responseTypeService = objectMapper.readValue(stringResponse, TypeService.class);
+		return responseTypeService;
 	}
 	
 	public Response login(String email) throws JsonProcessingException {

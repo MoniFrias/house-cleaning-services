@@ -44,7 +44,7 @@ public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter{
 		 web.ignoring().antMatchers("/houseCleaning/createAccountCustomer",
 				 "/houseCleaning/createAccountEmployee", "/houseCleaning/bookService", "/houseCleaning/validatePay",
 				 "/houseCleaning/findAll", "/houseCleaning/findByCustomerId", "/houseCleaning/findByBookNumber",
-				 "/houseCleaning//update/{number}", "/houseCleaning/deleteByBookNumber");
+				 "/houseCleaning//update/{number}", "/houseCleaning/deleteByBookNumber", "/houseCleaning/createTypeService");
 	}	
 
 }

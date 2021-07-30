@@ -23,6 +23,7 @@ import com.example.houseCleaning.entity.BookService;
 import com.example.houseCleaning.entity.Customer;
 import com.example.houseCleaning.entity.Employee;
 import com.example.houseCleaning.entity.Response;
+import com.example.houseCleaning.entity.TypeService;
 import com.example.houseCleaning.services.Services;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -49,6 +50,12 @@ public class Controller extends ResourceServerConfigurerAdapter{
 	@PostMapping(path = "/createAccountEmployee")
 	public ResponseEntity<Response> createAccountEmployee(@RequestBody Employee employee) {
 		Response response = services.createAccountEmployee(employee);
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+	
+	@PostMapping(path = "/createTypeService")
+	public ResponseEntity<Response> createTypeService(@RequestBody TypeService typeService) {
+		Response response = services.createTypeService(typeService);
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
