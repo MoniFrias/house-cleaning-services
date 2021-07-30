@@ -67,7 +67,7 @@ public class Controller {
 	}
 	
 	@GetMapping(path = "/findByPostalCode")
-	public ResponseEntity<Response> findByPostalCode(@RequestParam(name = "code") String code){
+	public ResponseEntity<Response> findByPostalCode(@RequestParam(name = "code") Long code){
 		Response response = services.findByPostalCode(code);
 		return new ResponseEntity<>(response,HttpStatus.FOUND);
 	}
