@@ -27,13 +27,16 @@ public class Appointment {
 	@Column(name = "bookNumber")
 	private Long bookNumber;
 	
-	@NotNull
 	@Column(name = "idEmployee")
 	private Long idEmployee;
 	
 	@NotNull
 	@Column(name = "idCustomer")
 	private Long idCustomer;
+	
+	@NotNull
+	@Column(name = "postalCode")
+	private Long postalCode;
 	
 	@NotNull
 	@Pattern(regexp = "[a-zA-Z]{5,20}")

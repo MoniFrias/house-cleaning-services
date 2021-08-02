@@ -15,7 +15,7 @@ public class Customer {
 	private String email;
 	private String city;	
 	private String state;
-	private String postalCode;
+	private Long postalCode;
 	private String address;
 	private Long phoneNumber;
 	private Long countService;

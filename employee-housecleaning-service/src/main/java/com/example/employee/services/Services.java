@@ -5,6 +5,7 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -56,47 +57,49 @@ public class Services {
 	
 	public Response saveAppointment(Appointment appointment, BindingResult validResultApp) throws JsonProcessingException {
 		Response response = new Response();
-		long count = 0;
-		boolean validationAppoitment = validationAppointment(appointment);
-		LocalDate appointmentDate = appointment.getDate();
-		LocalTime appointmentstartTime = appointment.getStarTime();
-		Employee employee = repository.findEmployeeById(appointment.getIdEmployee());
-		if (validationAppoitment && !validResultApp.hasErrors()) {
-			if (employee != null) {
-				TypeService typeServiceFound = typeServiceFound(appointment.getTypeService());
+		Boolean validationAppointment = validationAppointment(appointment);
+		LocalDate dateBook = appointment.getDate();
+		LocalTime AppointmentStarTime = appointment.getStarTime();
+		
+		List<Employee> listEmployee = repository.findEmployeeByPostalCode(appointment.getPostalCode());
+		if (validationAppointment && !validResultApp.hasErrors()) {
+			if (!listEmployee.isEmpty()) {
+				TypeService typeServiceFound = typeServiceFindByType(appointment.getTypeService());			
 				LocalTime appoitmentEndTime = appointment.getStarTime().plusHours(typeServiceFound.getTimeSuggested());
-				boolean validateDateTime = validateLocalDateTime(appointmentDate, appointmentstartTime, appoitmentEndTime);
+				boolean validateDateTime = validateLocalDateTime(dateBook, AppointmentStarTime, appoitmentEndTime);
 				if (validateDateTime) {
-					if (typeServiceFound != null) {
+					Optional<Employee> employeeFirst = listEmployee.stream().map(employee -> {
 						Employee employeeNew = addAppointment(employee);
+						long count = 0;
 						if (employeeNew.getAppointments() != null) {
 							count = employee.getAppointments().parallelStream()
-									.filter(appointmentFilter -> appointmentDate.isEqual(appointmentFilter.getDate())
-											&& !appointmentstartTime.isBefore(appointmentFilter.getStarTime())
-											&& !appointmentstartTime.isAfter(appointmentFilter.getEndTime())
-											|| appointmentDate.isEqual(appointmentFilter.getDate())
-													&& !appoitmentEndTime.isBefore(appointmentFilter.getStarTime())
-													&& !appoitmentEndTime.isAfter(appointmentFilter.getEndTime()))
+									.filter(appointmentFilter -> dateBook.isEqual(appointmentFilter.getDate())
+									&& !AppointmentStarTime.isBefore(appointmentFilter.getStarTime())
+									&& !AppointmentStarTime.isAfter(appointmentFilter.getEndTime())
+									|| dateBook.isEqual(appointmentFilter.getDate())
+											&& !appoitmentEndTime.isBefore(appointmentFilter.getStarTime())
+											&& !appoitmentEndTime.isAfter(appointmentFilter.getEndTime()))
 									.count();
-							if (count == 0) {
-								appointment.setEndTime(appoitmentEndTime);
-								response.setData(repositoryAppointment.save(appointment));
-								return response;
-							} else {
-								throw new ValidationException("That schedule is not available, there is already an appointment");
-							}
-						} else {
-							appointment.setEndTime(appoitmentEndTime);
-							response.setData(repositoryAppointment.save(appointment));
-							return response;
 						}
-					}
-				} else {
+						return (count > 0) ? null : employeeNew;
+					}).filter(Objects::nonNull).findFirst();
+				
+					if (employeeFirst.isPresent()) {
+						Employee employee = employeeFirst.get();
+						appointment.setIdEmployee(employee.getId());
+						appointment.setEndTime(appoitmentEndTime);
+						response.setData(repositoryAppointment.save(appointment));
+						return response;
+					}else {
+						throw new ValidationException("No employees available");
+					}					
+				}else {
 					throw new ValidationException("Out of schedule");
 				}
+			}else {
+				throw new ValidationException("No employees saved");
 			}
-			throw new ValidationException("No employee with that ID");
-		} else {
+		}else {
 			throw new ValidationException("Some values are wrong");
 		}
 	}	
@@ -262,16 +265,16 @@ public class Services {
 	private boolean validationAppointment(Appointment appoitment) {
 		patternIdCustomer = Pattern.compile("[0-9]{1,5}");
 		matcherIdCustomer = patternIdCustomer.matcher(Long.toString(appoitment.getIdCustomer()));
-		patternIdEmployee = Pattern.compile("[0-9]{1,5}");
-		matcherIdEmployee = patternIdEmployee.matcher(Long.toString(appoitment.getIdEmployee()));
-		if (matcherIdCustomer.matches() && matcherIdEmployee.matches()) {
+		pattern = Pattern.compile("[0-9]{5}");
+		matcher = pattern.matcher(Long.toString(appoitment.getPostalCode()));
+		if (matcherIdCustomer.matches() & matcher.matches()) {
 			return true;
 		}else {
 			return false;
 		}
 	}
 	
-	private TypeService typeServiceFound(String type) throws JsonProcessingException {
+	private TypeService typeServiceFindByType(String type) throws JsonProcessingException {
 		Response objectResponse = null;
 		try {
 			objectResponse = webClient.get().uri(typeServiceFindByType+type).retrieve().bodyToMono(Response.class).block();
