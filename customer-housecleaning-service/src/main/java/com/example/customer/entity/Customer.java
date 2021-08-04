@@ -1,9 +1,12 @@
 package com.example.customer.entity;
 
+import java.util.List;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.Transient;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
@@ -61,5 +64,8 @@ public class Customer {
 	
 	@Column(name = "countService")
 	private Long countService;
+	
+	@Transient
+	private List<Payment> listPayment;
 	
 }

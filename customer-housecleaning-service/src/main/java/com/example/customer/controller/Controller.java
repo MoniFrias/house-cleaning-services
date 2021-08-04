@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.customer.entity.Customer;
+import com.example.customer.entity.Payment;
 import com.example.customer.entity.Response;
 import com.example.customer.services.Services;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -35,6 +36,12 @@ public class Controller {
 		Response response = services.save(customer,validResult);
 		return new ResponseEntity<>(response,HttpStatus.OK);
 	}
+	
+	@PostMapping(path = "/savePayment")
+	public ResponseEntity<Response> savePayment(@Valid @RequestBody Payment payment,BindingResult validResultPayment){
+		Response response = services.savePayment(payment,validResultPayment);
+		return new ResponseEntity<>(response,HttpStatus.OK);
+	}	
 	
 	@GetMapping(path = "/findAll")
 	public ResponseEntity<Response> findAll(){
