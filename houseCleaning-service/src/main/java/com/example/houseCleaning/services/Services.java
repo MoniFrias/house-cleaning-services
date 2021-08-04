@@ -375,8 +375,9 @@ public class Services {
 		bookService.setEndTime(appoitmentEndTime);
 		bookService.setBookNumber(number);
 		Appointment appoitmentValues = setValuesAppointment(bookService);
-		appoitmentValues.setEndTime(appoitmentEndTime);
 		appoitmentValues.setIdCustomer(bookService.getIdCustomer());
+		appoitmentValues.setEndTime(appoitmentEndTime);		
+		appoitmentValues.setPostalCode(bookService.getCodeP());
 		employeeSaveAppointment(appoitmentValues);
 		return bookService;
 	}
@@ -476,8 +477,12 @@ public class Services {
 	
 	private void employeeSaveAppointment(Appointment appointment) {
 		MediaType contentType = null;
-		webClient.post().uri(employeeSaveAppointment).contentType(contentType.APPLICATION_JSON)
-		.body(BodyInserters.fromValue(appointment)).retrieve().bodyToMono(Response.class).block();
+		try {
+			webClient.post().uri(employeeSaveAppointment).contentType(contentType.APPLICATION_JSON)
+					.body(BodyInserters.fromValue(appointment)).retrieve().bodyToMono(Response.class).block();
+		} catch (Exception e) {
+			throw new ValidationException("Something is wrong");
+		}
 	}
 	
 	private void customerUpdateCountService(Long id, Long count) {

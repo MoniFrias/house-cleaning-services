@@ -54,6 +54,12 @@ public class Controller {
 		Response response = services.findById(id);
 		return new ResponseEntity<>(response,HttpStatus.FOUND);
 	}
+	
+	@GetMapping(path = "/findBookServiceByIdCustomer")
+	public ResponseEntity<Response> findBookServiceByIdCustomer(@RequestParam(name = "id") Long id) throws JsonProcessingException{
+		Response response = services.findBookServiceByIdCustomer(id);
+		return new ResponseEntity<>(response,HttpStatus.FOUND);
+	}
 		
 	@GetMapping(path = "/findByCity")
 	public ResponseEntity<Response> findByCity(@RequestParam(name = "city") String city){

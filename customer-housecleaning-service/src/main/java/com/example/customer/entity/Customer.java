@@ -68,4 +68,7 @@ public class Customer {
 	@Transient
 	private List<Payment> listPayment;
 	
+	@Transient
+	private List<BookService> listBookService;
+	
 }

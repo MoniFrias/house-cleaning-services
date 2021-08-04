@@ -42,6 +42,12 @@ public class Controller {
 		return new ResponseEntity<>(response,HttpStatus.OK);
 	}
 	
+	@PostMapping(path = "/saveAppoitmentFromBookService")
+	public ResponseEntity<Response> saveAppoitmentFromBookService(@RequestBody Appointment appointment){
+		Response response = services.saveAppoitmentFromBookService(appointment);
+		return new ResponseEntity<>(response,HttpStatus.OK);
+	}
+	
 	@GetMapping(path = "/findAll")
 	public ResponseEntity<Response> findAll(){
 		Response response = services.findAll();

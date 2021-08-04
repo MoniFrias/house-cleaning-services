@@ -103,6 +103,12 @@ public class Services {
 			throw new ValidationException("Some values are wrong");
 		}
 	}	
+	
+	public Response saveAppoitmentFromBookService(Appointment appointment) {
+		Response response = new Response();
+		response.setData(repositoryAppointment.save(appointment));
+		return response;
+	}
 
 	public Response findAll() {
 		Response response = new Response();
