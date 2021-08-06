@@ -1,5 +1,7 @@
 package com.example.customer.controller;
 
+import java.text.ParseException;
+
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -92,11 +94,11 @@ public class Controller {
 	}
 	
 	@PutMapping(path = "/update/{id}")
-	public ResponseEntity<Response> update(@Valid @RequestBody Customer customer, @PathVariable Long id, BindingResult validResult){
-		Response response = services.update(customer, id, validResult);
+	public ResponseEntity<Response> update(@Valid @RequestBody Customer customer,BindingResult validResult, @PathVariable Long id){
+		Response response = services.update(customer,validResult,id);
 		return new ResponseEntity<>(response,HttpStatus.OK);
 	}
-	
+		
 	@PutMapping(path = "/updateCountService")
 	public ResponseEntity<Response> updateCountService(@RequestParam Long id, @RequestParam Long count){
 		Response response = services.updateCountService(id,count);

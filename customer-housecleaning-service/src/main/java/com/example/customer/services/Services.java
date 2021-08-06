@@ -6,6 +6,9 @@ import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
+import javax.swing.text.MaskFormatter;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -57,7 +60,16 @@ public class Services {
 		}
 	}
 	
-	public Response savePayment(Payment payment, BindingResult validResultPayment) {
+	public static String formatCardNumber(String cardNumber){        
+        StringBuilder sbMaskString = new StringBuilder(12);        
+        for(int i = 0; i < 12; i++){        
+        	sbMaskString.append('*');
+        }        
+        return sbMaskString.toString() 
+            + cardNumber.substring(0 + 12);
+	}
+	
+	public Response savePayment(Payment payment, BindingResult validResultPayment){
 		Response response = new Response();
 		pattern = Pattern.compile("[0-9]{16}");
 		matcher = pattern.matcher(Long.toString(payment.getCardNumber()));
@@ -72,7 +84,9 @@ public class Services {
 				if (customerFound != null) {
 					Payment paymentFound = repositoryPayment.findPaymentByIdCustomerAndCardNumber(payment.getIdCustomer(),payment.getCardNumber());
 					if (paymentFound==null) {
-						response.setData(repositoryPayment.save(payment));
+						repositoryPayment.save(payment);
+						String cardNumber = formatCardNumber(Long.toString(payment.getCardNumber()));
+						response.setData(cardNumber);
 						return response;
 					}else {
 						throw new ValidationException("Already saved that car number");
@@ -116,8 +130,6 @@ public class Services {
 		}
 	}
 	
-	
-
 	public Response findById(Long id) throws JsonProcessingException {
 		Response response = new Response();
 		Customer customer = repository.findCustomerById(id);
@@ -202,10 +214,10 @@ public class Services {
 		List<Object> listCustomer = repository.findCustomerByStates(state);
 		if (matcher.matches()) {
 			if (!listCustomer.isEmpty()) {
-				listCustomer.stream().map(customer ->{
-					Customer customerNew = setPaymentsMethods((Customer) customer);
-					return customerNew;
-				}).filter(Objects::nonNull).collect(Collectors.toList());				
+//				listCustomer.stream().map(customer ->{
+//					Customer customerNew = setPaymentsMethods((Customer) customer);
+//					return customerNew;
+//				}).filter(Objects::nonNull).collect(Collectors.toList());				
 				
 				response.setData(listCustomer);
 				return response;
@@ -255,24 +267,36 @@ public class Services {
 		}
 	}	
 
-	public Response update(Customer customer, Long id, BindingResult validResult) {
+	public Response update(Customer customer,BindingResult validResultUpdate, Long id) {
 		Response response = new Response();
-		boolean matcherPhoneNumber = validatePhoneNumberAndEmail(customer.getPhoneNumber(), customer.getPostalCode(), customer.getEmail());
+		customer.setCountService(0L);
 		Customer customerFound = repository.findCustomerById(id);
+		Customer customerFoundByEmail = repository.findCustomerByEmail(customer.getEmail()); 
+		boolean matcherPhoneNumber = validatePhoneNumberAndEmail(customer.getPhoneNumber(), customer.getPostalCode(),customer.getEmail());
 		if (id != null && id > 0) {
-			if (matcherPhoneNumber && !validResult.hasErrors()) {
-				if (customerFound != null) {
-					response.setData(repository.save(updateCustomer(customer, customerFound)));
-					return response;
-				} else {
-					throw new ValidationException("No customer with that Id");
+			if (matcherPhoneNumber && !validResultUpdate.hasErrors()) {
+				if (customerFoundByEmail == null) {
+					if (customerFound != null) {
+						response.setData(repository.save(updateCustomer(customer, customerFound)));
+						return response;
+					} else {
+						throw new ValidationException("No customer with that Id");
+					}
+				}else {
+					if (customerFound != null && customerFoundByEmail.getId() == id) {
+						response.setData(repository.save(updateCustomer(customer, customerFound)));
+						return response;
+					} else {
+						throw new ValidationException("No customer with that Id or already exits with that Email");
+					}
 				}
 			} else {
 				throw new ValidationException("Some values are wrong");
 			}
-		} else {
+		}else {
 			throw new ValidationException("Id can't be null or zero");
 		}
+		
 	}
 
 	public Response updateCountService(Long id, Long count) {
@@ -322,6 +346,7 @@ public class Services {
 		}
 	}
 	
+	
 	private Customer updateCustomer(Customer customer, Customer customerFound) {
 		customerFound.setName(customer.getName());
 		customerFound.setLastName(customer.getLastName());
@@ -335,7 +360,11 @@ public class Services {
 	private List<BookService> listBookServiceFound(Long id) throws JsonProcessingException{
 		Response objectResponse = null;
 		try {
-			objectResponse = webClient.get().uri(bookServiceFindByIdCustomer).header("id", Long.toString(id)).retrieve().bodyToMono(Response.class).block();
+			objectResponse = webClient.get()
+					.uri(bookServiceFindByIdCustomer+id)
+					.retrieve()
+					.bodyToMono(Response.class)
+					.block();
 		}catch (Exception e) {
 			throw new ValidationException("No Book services for that Customer");
 		}

@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.reactive.function.client.WebClient;
+
 import com.example.employee.entity.Appointment;
 import com.example.employee.entity.Employee;
 import com.example.employee.entity.Response;
@@ -75,10 +76,10 @@ public class Services {
 							count = employee.getAppointments().parallelStream()
 									.filter(appointmentFilter -> dateBook.isEqual(appointmentFilter.getDate())
 									&& !AppointmentStarTime.isBefore(appointmentFilter.getStarTime())
-									&& !AppointmentStarTime.isAfter(appointmentFilter.getEndTime())
+									&& !AppointmentStarTime.isAfter(appointmentFilter.getEndTime().plusHours(1L))
 									|| dateBook.isEqual(appointmentFilter.getDate())
 											&& !appoitmentEndTime.isBefore(appointmentFilter.getStarTime())
-											&& !appoitmentEndTime.isAfter(appointmentFilter.getEndTime()))
+											&& !appoitmentEndTime.isAfter(appointmentFilter.getEndTime().plusHours(1L)))
 									.count();
 						}
 						return (count > 0) ? null : employeeNew;
@@ -178,6 +179,22 @@ public class Services {
 		}
 	}
 	
+	public Response findByEmail(String email) {
+		Response response = new Response();
+		Employee employeeFound = repository.findEmployeeByEmail(email);
+		if (email.contains(".com")) {
+			if (employeeFound != null) {
+				employeeFound = addAppointment(employeeFound);
+				response.setData(employeeFound);
+				return response;
+			} else {
+				throw new ValidationException("No customer with that Email");
+			}
+		}else {
+			throw new ValidationException("Value is wrong");
+		}
+	}
+	
 	public Response findByPostalCode(Long code) {
 		Response response = new Response();
 		pattern = Pattern.compile("[0-9]{5}");
@@ -195,20 +212,29 @@ public class Services {
 			throw new ValidationException("Some values are wrong");
 		}
 	}
-		
-
 
 	public Response update(Employee employee, Long id, BindingResult validResult) {
 		Response response = new Response();
 		boolean validationResult = validation(employee.getPhoneNumber(), employee.getPostalCode(), employee.getEmail(), employee.getNss());
 		Employee employeeFound = repository.findEmployeeById(id);
+		Employee employeeFoundByEmail = repository.findEmployeeByEmail(employee.getEmail());
 		if (id != null && id > 0) {
 			if (validationResult && !validResult.hasErrors()) {
-				if (employeeFound != null) {
-					response.setData(repository.save(updateEmployee(employee, employeeFound)));
-					return response;
-				}else {
-					throw new ValidationException("No employee with that Id");
+				if (employeeFoundByEmail == null) {
+					if (employeeFound != null) {
+						response.setData(repository.save(updateEmployee(employee, employeeFound)));
+						return response;
+					}else {
+						throw new ValidationException("No employee with that Id");
+					}
+				}else{
+					if (employeeFound != null && employeeFoundByEmail.getId() == id) {
+						response.setData(repository.save(updateEmployee(employee, employeeFound)));
+						return response;
+					}else {
+						throw new ValidationException("No employee with that Id or already save employee with that email");
+					}
+					
 				}
 			}else {
 				throw new ValidationException("Some values are wrong");

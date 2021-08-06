@@ -100,21 +100,6 @@ public class Services {
 		return response;
 	}
 	
-	private TypeService saveTypeService(TypeService typeService) throws JsonMappingException, JsonProcessingException {
-		MediaType contentType = null;
-		Response objectResponse = null;
-		try {
-			objectResponse = webClient.post().uri(typeServiceSave).contentType(contentType.APPLICATION_JSON)
-					.body(BodyInserters.fromValue(typeService)).retrieve().bodyToMono(Response.class).block();
-		} catch (Exception e) {
-			throw new ValidationException("Some data is wrong or already there a Type service with that name");
-		}
-		Object objectTypeService = objectResponse.getData();
-		ObjectMapper objectMapper = new ObjectMapper();
-		String stringResponse = objectMapper.writeValueAsString(objectTypeService);
-		TypeService responseTypeService = objectMapper.readValue(stringResponse, TypeService.class);
-		return responseTypeService;
-	}
 	
 	public Response login(String email) throws JsonProcessingException {
 		Response response = new Response();	
@@ -212,9 +197,9 @@ public class Services {
 
 	public Response findByCustomerId(Long id) {
 		Response response = new Response();
-		BookService bookSeviceFound  =repository.findBookServiceByIdCustomer(id);
+		List<BookService> bookSeviceFound  = repository.findBookServiceByIdCustomer(id);
 		if (id != null && id > 0) {
-			if (bookSeviceFound != null) {
+			if (!bookSeviceFound.isEmpty()) {
 				response.setData(bookSeviceFound);
 				return response;
 			}else {
@@ -341,17 +326,17 @@ public class Services {
 	}
 	
 	private Optional<Employee> validateAvaliable(List<Employee> listEmployee, LocalDate dateBook,
-			LocalTime appointmentTime, LocalTime appoitmentEndTime) {
+		LocalTime appointmentTime, LocalTime appoitmentEndTime) {
 		Optional<Employee> employeeA = listEmployee.stream().map(employee -> {
 			long count = 0;
 			if (employee.getAppointments() != null) {
 				count = employee.getAppointments().parallelStream()
 						.filter(appointment -> dateBook.isEqual(appointment.getDate())
 						&& !appointmentTime.isBefore(appointment.getStarTime())
-						&& !appointmentTime.isAfter(appointment.getEndTime())
+						&& !appointmentTime.isAfter(appointment.getEndTime().plusHours(1L))//give an hour to move
 						|| dateBook.isEqual(appointment.getDate())
 								&& !appoitmentEndTime.isBefore(appointment.getStarTime())
-								&& !appoitmentEndTime.isAfter(appointment.getEndTime()))
+								&& !appoitmentEndTime.isAfter(appointment.getEndTime().plusHours(1L)))
 						.count();
 			}
 			return (count > 0) ? null : employee;
@@ -460,6 +445,23 @@ public class Services {
 		return responseType;
 
 	}
+	
+	private TypeService saveTypeService(TypeService typeService) throws JsonMappingException, JsonProcessingException {
+		MediaType contentType = null;
+		Response objectResponse = null;
+		try {
+			objectResponse = webClient.post().uri(typeServiceSave).contentType(contentType.APPLICATION_JSON)
+					.body(BodyInserters.fromValue(typeService)).retrieve().bodyToMono(Response.class).block();
+		} catch (Exception e) {
+			throw new ValidationException("Some data is wrong or already there a Type service with that name");
+		}
+		Object objectTypeService = objectResponse.getData();
+		ObjectMapper objectMapper = new ObjectMapper();
+		String stringResponse = objectMapper.writeValueAsString(objectTypeService);
+		TypeService responseTypeService = objectMapper.readValue(stringResponse, TypeService.class);
+		return responseTypeService;
+	}
+	
 	
 	private Customer customerFindByEmail(String email) throws JsonProcessingException {
 		Response objectResponse = null;

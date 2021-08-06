@@ -83,14 +83,26 @@ public class Services {
 	public Response update(TypeService typeService, BindingResult validResult, Long id) {
 		Response response = new Response();
 		TypeService typeServiceFound = repository.findTypeServiceById(id);
+		TypeService typeServiceNameFound = repository.findTypeServiceByName(typeService.getName()); 
 		boolean validationResult = validation(typeService.getCost(), typeService.getTimeSuggested());
 		if (id != null && id > 0) {
 			if(validationResult && !validResult.hasErrors()) {
-				if (typeServiceFound != null) {
-					response.setData(repository.save(updateTypeService(typeService, typeServiceFound)));
-					return response;
+				if (typeServiceNameFound == null) {
+					if (typeServiceFound != null) {
+						typeServiceFound = updateTypeService(typeService, typeServiceFound);
+						response.setData(repository.save(typeServiceFound));
+						return response;
+					}else {
+						throw new ValidationException("No type services with that name");
+					}
 				}else {
-					throw new ValidationException("No type services with that name");
+					if (typeServiceFound != null && typeServiceNameFound.getId() == id) {
+						typeServiceFound = updateTypeService(typeService, typeServiceFound);
+						response.setData(repository.save(typeServiceFound));
+						return response;
+					}else {
+						throw new ValidationException("No type services with that name or already save a type service with that name");
+					}
 				}
 			}else {
 				throw new ValidationException("Some values are wrong");

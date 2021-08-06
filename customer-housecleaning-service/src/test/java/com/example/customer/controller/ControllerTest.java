@@ -46,7 +46,7 @@ class ControllerTest {
 	
 	@Test
 	public void updateTest() {
-		assertEquals(HttpStatus.OK, controller.update(customer, 1L, validResult).getStatusCode());
+		assertEquals(HttpStatus.OK, controller.update(customer, validResult, 1L).getStatusCode());
 	}
 	
 	@Test

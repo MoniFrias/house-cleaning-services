@@ -84,7 +84,7 @@ public class Controller extends ResourceServerConfigurerAdapter{
 	}
 	
 	@GetMapping(path = "/findByCustomerId")
-	public ResponseEntity<Response> findByCustomerId(@RequestHeader(name = "id") Long id){
+	public ResponseEntity<Response> findByCustomerId(@RequestParam(name = "id") Long id){
 		Response response = services.findByCustomerId(id);
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
