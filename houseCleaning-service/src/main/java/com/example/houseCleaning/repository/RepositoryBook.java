@@ -13,6 +13,8 @@ public interface RepositoryBook extends JpaRepository<BookService, Long>{
 	BookService findBookServiceBybookNumber(Long bookNumber);
 
 	List<BookService> findBookServiceByIdCustomer(Long id);
+
+	BookService findBookServiceById(Long id);
 	
 
 }

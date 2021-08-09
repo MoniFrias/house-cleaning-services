@@ -42,12 +42,6 @@ public class Controller {
 		return new ResponseEntity<>(response,HttpStatus.OK);
 	}
 	
-	@PostMapping(path = "/saveAppoitmentFromBookService")
-	public ResponseEntity<Response> saveAppoitmentFromBookService(@RequestBody Appointment appointment){
-		Response response = services.saveAppoitmentFromBookService(appointment);
-		return new ResponseEntity<>(response,HttpStatus.OK);
-	}
-	
 	@GetMapping(path = "/findAll")
 	public ResponseEntity<Response> findAll(){
 		Response response = services.findAll();
@@ -84,10 +78,21 @@ public class Controller {
 		return new ResponseEntity<>(response,HttpStatus.FOUND);
 	}
 	
+	@GetMapping(path = "/findByBookNumber")
+	public ResponseEntity<Response> findByBookNumber(@RequestParam(name = "bookNumber") Long bookNumber){
+		Response response = services.findByBookNumber(bookNumber);
+		return new ResponseEntity<>(response,HttpStatus.FOUND);
+	}
 	
 	@PutMapping(path = "/update/{id}")
 	public ResponseEntity<Response> update(@Valid @RequestBody Employee employee, @PathVariable Long id, BindingResult validResult){
 		Response response = services.update(employee, id, validResult);
+		return new ResponseEntity<>(response,HttpStatus.OK);
+	}
+	
+	@PutMapping(path = "/updateAppointment")
+	public ResponseEntity<Response> updateAppointment(@Valid @RequestBody Appointment appointment,BindingResult validResult) throws JsonProcessingException{
+		Response response = services.updateAppointment(appointment, validResult);
 		return new ResponseEntity<>(response,HttpStatus.OK);
 	}
 	

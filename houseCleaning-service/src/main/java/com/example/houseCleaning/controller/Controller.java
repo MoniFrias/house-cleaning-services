@@ -95,9 +95,9 @@ public class Controller extends ResourceServerConfigurerAdapter{
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 	
-	@PutMapping(path = "/update/{number}")
-	public ResponseEntity<Response> update(@Valid @RequestBody BookService bookService , @PathVariable Long number, BindingResult validResultUpdate) throws JsonProcessingException{
-		Response response = services.update(bookService,number,validResultUpdate);
+	@PutMapping(path = "/update/{id}")
+	public ResponseEntity<Response> update(@Valid @RequestBody BookService bookService , @PathVariable Long id, BindingResult validResultUpdate) throws JsonProcessingException{
+		Response response = services.update(bookService,id,validResultUpdate);
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 	
