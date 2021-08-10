@@ -138,28 +138,33 @@ public class Services {
 
 				Optional<Employee> employeeValidation = validateAvaliable(listEmployee, dateBook, appointmentstartTime,
 						appoitmentEndTime);
+				List<BookService> listBookServiceByCustomer = repository.findBookServiceByIdCustomer(bookService.getIdCustomer());
+				Long count = listBookServiceByCustomer.parallelStream().filter(date -> date.getDate().equals(dateBook)).count();
+				if (count == 0) {					
+					if (employeeValidation.isPresent()) {
+						Employee employee = employeeValidation.get();
 
-				if (employeeValidation.isPresent()) {
-					Employee employee = employeeValidation.get();
-
-					if (customerStatus.getCountService() == 0) {
-						double descount = typeServiceFound.getCost() * (0.2);
-						Long costTotal = typeServiceFound.getCost() - (new Double(descount)).longValue();
-						customerUpdateCountService(bookService.getIdCustomer(), 1L);
-						bookService.setCost(costTotal);
-						BookService bookServiceNew = setValuesBookService(bookService, employee, appoitmentEndTime);
-						response.setData(repository.save(bookServiceNew));
-						return response;
-					} else {
-						Long countNew = customerStatus.getCountService() + 1L;
-						customerUpdateCountService(bookService.getIdCustomer(), countNew);
-						bookService.setCost(typeServiceFound.getCost());
-						BookService bookServiceNew = setValuesBookService(bookService, employee, appoitmentEndTime);
-						response.setData(repository.save(bookServiceNew));
-						return response;
+						if (customerStatus.getCountService() == 0) {
+							double descount = typeServiceFound.getCost() * (0.2);
+							Long costTotal = typeServiceFound.getCost() - (new Double(descount)).longValue();
+							customerUpdateCountService(bookService.getIdCustomer(), 1L);
+							bookService.setCost(costTotal);
+							BookService bookServiceNew = setValuesBookService(bookService, employee, appoitmentEndTime);
+							response.setData(repository.save(bookServiceNew));
+							return response;
+						} else {
+							Long countNew = customerStatus.getCountService() + 1L;
+							customerUpdateCountService(bookService.getIdCustomer(), countNew);
+							bookService.setCost(typeServiceFound.getCost());
+							BookService bookServiceNew = setValuesBookService(bookService, employee, appoitmentEndTime);
+							response.setData(repository.save(bookServiceNew));
+							return response;
+						}
+					}else {
+						throw new ValidationException("No employees available");
 					}
 				} else {
-					throw new ValidationException("No employees available");
+					throw new ValidationException("Already have a book for that day, only you can update that book service");
 				}
 			} else {
 				throw new ValidationException("Out of schedule");
@@ -229,6 +234,26 @@ public class Services {
 			throw new ValidationException("Some data is wrong");
 		}
 	}
+	
+	public Response findServicesPerMonth(String fromDate, String toDate) {
+		Response response = new Response();
+		Pattern pattern = Pattern.compile("^(((19|2[0-9])[0-9]{2})-(0[13578]|10|12)-(0[1-9]|[12][0-9]|3[01]))$"  + 
+				  						  "|^(((19|2[0-9])[0-9]{2})-(0[469]|11)-(0[1-9]|[12][0-9]|30))$");
+		Matcher matcherFromDate = pattern.matcher(fromDate);
+		Matcher matcherToDate = pattern.matcher(toDate);
+		if (matcherFromDate.matches() && matcherToDate.matches()) {
+			List<BookService> listServicesPerMonth = repository.findBookServiceByDateGreaterThanEqualAndDateLessThanEqual(LocalDate.parse(fromDate),LocalDate.parse(toDate));
+			if (!listServicesPerMonth.isEmpty()) {
+				response.setData(listServicesPerMonth);
+				return response;
+			}else {
+				throw new ValidationException("No bookServices between that dates");
+			}
+		}else {
+			throw new ValidationException("Some values are wrong");
+		}
+		
+	}
 
 	public Response update(BookService bookService, Long id, BindingResult validResultUpdate)
 			throws JsonProcessingException {
@@ -278,6 +303,23 @@ public class Services {
 			throw new ValidationException("Some data is wrong");
 		}
 
+	}
+	
+	public Response updateStatusService(Long bookService, String status) {
+		Response response = new Response();
+		BookService bookSeviceFound = repository.findBookServiceBybookNumber(bookService);
+		boolean validationNumber = validateBookNumber(bookService);
+		if (validationNumber) {
+			if (bookSeviceFound != null) {
+				bookSeviceFound.setStatusService(status);
+				response.setData(repository.save(bookSeviceFound));
+				return response;
+			} else {
+				throw new ValidationException("No bookService for that bookNumber");
+			}
+		} else {
+			throw new ValidationException("Some data is wrong");
+		}
 	}
 
 	public Response deleteByBookNumber(Long number) {

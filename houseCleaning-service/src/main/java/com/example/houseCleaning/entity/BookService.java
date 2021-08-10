@@ -2,7 +2,6 @@ package com.example.houseCleaning.entity;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
-
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -22,46 +21,50 @@ public class BookService {
 
 	@Id
 	@GeneratedValue
+	@Column(name = "ID")
 	private Long id;
 	
-	@Column(name = "bookNumber")
+	@Column(name = "BOOK_NUMBER")
 	private Long bookNumber;
 	
 	@NotNull
-	@Column(name = "idCustomer")
+	@Column(name = "ID_CUSTOMER")
 	private Long idCustomer;
 	
 	
-	@Column(name = "idEmployee")
+	@Column(name = "ID_EMPLOYEE")
 	private Long idEmployee;
 	
 	@NotNull
-	@Column(name = "codeP")
+	@Column(name = "CODE_POSTAL")
 	private Long codeP;
 	
 	@NotNull
 	@Pattern(regexp = "[a-zA-Z]{5,20}")
-	@Column(name = "typeService")
+	@Column(name = "TYPE_SERVICE")
 	private String typeService;
 	
 	@NotNull
-	@Column(name = "date")
+	@Column(name = "DATE")
 	private LocalDate date;
 	
 	@NotNull
-	@Column(name = "starTime")
+	@Column(name = "STAR_TIME")
 	private LocalTime starTime;
 	
-	@Column(name = "endTime")
+	@Column(name = "END_TIME")
 	private LocalTime endTime;
 		
-	@Column(name = "cost")
+	@Column(name = "COST")
 	private Long cost;
 	
-	@Column(name = "statusPay")
+	@Column(name = "STATUS_PAY")
 	private String statusPay;
 	
-	@Column(name = "creditCard")
+	@Column(name = "CREDIT_CARD")
 	private Long creditCard;
+	
+	@Column(name = "STATUS_SERVICE")
+	private String statusService;
 
 }

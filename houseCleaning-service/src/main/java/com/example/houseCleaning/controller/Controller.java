@@ -14,11 +14,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
 import com.example.houseCleaning.entity.BookService;
 import com.example.houseCleaning.entity.Customer;
 import com.example.houseCleaning.entity.Employee;
@@ -95,9 +93,21 @@ public class Controller extends ResourceServerConfigurerAdapter{
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 	
+	@GetMapping(path = "/findServicesPerMonth")
+	public ResponseEntity<Response> findServicesPerMonth(@RequestParam(name = "fromDate") String fromDate, @RequestParam(name = "toDate") String toDate ){
+		Response response = services.findServicesPerMonth(fromDate, toDate);
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+	
 	@PutMapping(path = "/update/{id}")
 	public ResponseEntity<Response> update(@Valid @RequestBody BookService bookService , @PathVariable Long id, BindingResult validResultUpdate) throws JsonProcessingException{
 		Response response = services.update(bookService,id,validResultUpdate);
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+	
+	@GetMapping(path = "/updateStatusService")
+	public ResponseEntity<Response> updateStatusService(@RequestParam(name = "bookService") Long bookService, @RequestParam(name = "status") String status){
+		Response response = services.updateStatusService(bookService,status);
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 	

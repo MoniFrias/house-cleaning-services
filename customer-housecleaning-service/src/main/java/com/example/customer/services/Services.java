@@ -6,15 +6,11 @@ import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-
-import javax.swing.text.MaskFormatter;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.reactive.function.client.WebClient;
-
 import com.example.customer.entity.BookService;
 import com.example.customer.entity.Customer;
 import com.example.customer.entity.Payment;
@@ -213,12 +209,7 @@ public class Services {
 		matcher = pattern.matcher(state);
 		List<Object> listCustomer = repository.findCustomerByStates(state);
 		if (matcher.matches()) {
-			if (!listCustomer.isEmpty()) {
-//				listCustomer.stream().map(customer ->{
-//					Customer customerNew = setPaymentsMethods((Customer) customer);
-//					return customerNew;
-//				}).filter(Objects::nonNull).collect(Collectors.toList());				
-				
+			if (!listCustomer.isEmpty()) {				
 				response.setData(listCustomer);
 				return response;
 			} else {

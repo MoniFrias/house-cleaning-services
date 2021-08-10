@@ -1,7 +1,7 @@
 package com.example.houseCleaning.repository;
 
+import java.time.LocalDate;
 import java.util.List;
-
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -15,6 +15,6 @@ public interface RepositoryBook extends JpaRepository<BookService, Long>{
 	List<BookService> findBookServiceByIdCustomer(Long id);
 
 	BookService findBookServiceById(Long id);
-	
 
+	List<BookService> findBookServiceByDateGreaterThanEqualAndDateLessThanEqual(LocalDate fromDate, LocalDate toDate);
 }
