@@ -3,6 +3,9 @@ package com.example.houseCleaning.entity;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+
+import javax.persistence.Column;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -21,4 +24,5 @@ public class Appointment{
 	private LocalDate date;
 	private LocalTime starTime;
 	private LocalTime endTime;
+	private String statusService;
 }

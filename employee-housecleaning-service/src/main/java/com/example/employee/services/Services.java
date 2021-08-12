@@ -73,26 +73,15 @@ public class Services {
 					LocalTime appoitmentEndTime = appointment.getStarTime().plusHours(typeServiceFound.getTimeSuggested());
 					boolean validateDateTime = validateLocalDateTime(dateBook, AppointmentStarTime, appoitmentEndTime);
 					if (validateDateTime) {
-						Optional<Employee> employeeFirst = listEmployee.stream().map(employee -> {
-							Employee employeeNew = addAppointment(employee);
-							long count = 0;
-							if (employeeNew.getAppointments() != null) {
-								count = employee.getAppointments().parallelStream()
-										.filter(appointmentFilter -> dateBook.isEqual(appointmentFilter.getDate())
-										&& !AppointmentStarTime.isBefore(appointmentFilter.getStarTime())
-										&& !AppointmentStarTime.isAfter(appointmentFilter.getEndTime().plusHours(1L))
-										|| dateBook.isEqual(appointmentFilter.getDate())
-												&& !appoitmentEndTime.isBefore(appointmentFilter.getStarTime())
-												&& !appoitmentEndTime.isAfter(appointmentFilter.getEndTime().plusHours(1L)))
-										.count();
-							}
-							return (count > 0) ? null : employeeNew;
-						}).filter(Objects::nonNull).findFirst();
+						Optional<Employee> employeeFirst = validateAvailable(listEmployee, dateBook, AppointmentStarTime, appoitmentEndTime);
 					
 						if (employeeFirst.isPresent()) {
 							Employee employee = employeeFirst.get();
+							Long bookNumber = createBookNumber(appointment);
+							appointment.setBookNumber(bookNumber);
 							appointment.setIdEmployee(employee.getId());
 							appointment.setEndTime(appoitmentEndTime);
+							appointment.setStatusService("Pendient");
 							response.setData(repositoryAppointment.save(appointment));
 							return response;
 						}else {
@@ -112,6 +101,8 @@ public class Services {
 			return response;
 		}
 	}	
+	
+	
 
 	public Response findAll() {
 		Response response = new Response();
@@ -272,26 +263,12 @@ public class Services {
 		
 		List<Employee> listEmployee = repository.findEmployeeByPostalCode(appointment.getPostalCode());
 		if (validationAppointment && !validResultApp.hasErrors()) {
-			if (!listEmployee.isEmpty()) {
+			if (!listEmployee.isEmpty() && appointmentFound != null) {
 				TypeService typeServiceFound = typeServiceFindByType(appointment.getTypeService());			
 				LocalTime appoitmentEndTime = appointment.getStarTime().plusHours(typeServiceFound.getTimeSuggested());
 				boolean validateDateTime = validateLocalDateTime(dateBook, AppointmentStarTime, appoitmentEndTime);
 				if (validateDateTime) {
-					Optional<Employee> employeeFirst = listEmployee.stream().map(employee -> {
-						Employee employeeNew = addAppointment(employee);
-						long count = 0;
-						if (employeeNew.getAppointments() != null) {
-							count = employee.getAppointments().parallelStream()
-									.filter(appointmentFilter -> dateBook.isEqual(appointmentFilter.getDate())
-									&& !AppointmentStarTime.isBefore(appointmentFilter.getStarTime())
-									&& !AppointmentStarTime.isAfter(appointmentFilter.getEndTime().plusHours(1L))
-									|| dateBook.isEqual(appointmentFilter.getDate())
-											&& !appoitmentEndTime.isBefore(appointmentFilter.getStarTime())
-											&& !appoitmentEndTime.isAfter(appointmentFilter.getEndTime().plusHours(1L)))
-									.count();
-						}
-						return (count > 0) ? null : employeeNew;
-					}).filter(Objects::nonNull).findFirst();
+					Optional<Employee> employeeFirst = validateAvailable(listEmployee, dateBook, AppointmentStarTime, appoitmentEndTime);
 				
 					if (employeeFirst.isPresent()) {
 						Employee employee = employeeFirst.get();
@@ -311,7 +288,7 @@ public class Services {
 					throw new ValidationException("Out of schedule");
 				}
 			}else {
-				throw new ValidationException("No employees saved");
+				throw new ValidationException("No employees saved or no appointment with that ID");
 			}
 		}else {
 			throw new ValidationException("Some values are wrong");
@@ -341,6 +318,26 @@ public class Services {
 		employeeFound.setCity(employee.getCity());
 		employeeFound.setPhoneNumber(employee.getPhoneNumber());
 		return employeeFound;
+	}
+	
+	private Optional<Employee> validateAvailable(List<Employee> listEmployee, LocalDate dateBook, LocalTime AppointmentStarTime, LocalTime appoitmentEndTime) {
+		Optional<Employee> employeeA = listEmployee.stream().map(employee -> {
+			Employee employeeNew = addAppointment(employee);
+			long count = 0;
+			if (employeeNew.getAppointments() != null) {
+				count = employee.getAppointments().parallelStream()
+						.filter(appointmentFilter -> dateBook.isEqual(appointmentFilter.getDate())
+						&& !AppointmentStarTime.isBefore(appointmentFilter.getStarTime())
+						&& !AppointmentStarTime.isAfter(appointmentFilter.getEndTime().plusHours(1L))
+						|| dateBook.isEqual(appointmentFilter.getDate())
+								&& !appoitmentEndTime.isBefore(appointmentFilter.getStarTime())
+								&& !appoitmentEndTime.isAfter(appointmentFilter.getEndTime().plusHours(1L)))
+						.count();
+			}
+			return (count > 0) ? null : employeeNew;
+		}).filter(Objects::nonNull).findFirst();
+		
+		return employeeA;
 	}
 	
 	private boolean validateLocalDateTime(LocalDate date, LocalTime startTime, LocalTime endTime) {
@@ -413,7 +410,18 @@ public class Services {
 		return listEmployee;
 	}
 
-	
+	private Long createBookNumber(Appointment appointment) {
+		int month = LocalDate.now().getMonthValue();
+		int year = LocalDate.now().getYear();
+		int day = LocalDate.now().getDayOfMonth();
+		int hour = LocalTime.now().getHour();
+		int minute = LocalTime.now().getMinute();
+		int second = LocalTime.now().getSecond();
+		Long number = Long.valueOf(String.valueOf(year) + String.valueOf(month) + String.valueOf(day)
+				+ String.valueOf(hour) + String.valueOf(minute) + String.valueOf(second)
+				+ String.valueOf(appointment.getIdCustomer()));
+		return number;
+	}
 
 	
 	
