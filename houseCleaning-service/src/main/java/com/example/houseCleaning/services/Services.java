@@ -18,6 +18,7 @@ import com.example.houseCleaning.entity.Appointment;
 import com.example.houseCleaning.entity.BookService;
 import com.example.houseCleaning.entity.Customer;
 import com.example.houseCleaning.entity.Employee;
+import com.example.houseCleaning.entity.Payment;
 import com.example.houseCleaning.entity.Response;
 import com.example.houseCleaning.entity.TypeService;
 import com.example.houseCleaning.entity.ValidationException;
@@ -40,7 +41,11 @@ public class Services {
 	@Value("${customerSave}")
 	private String customerSave;
 	@Value("${customerFindById}")
-	private String customerFindById;
+	private String customerFindById;	
+	@Value("${customerFindInfoById}")
+	private String customerFindInfoById;
+	@Value("${customerFindPaymentsById}")
+	private String customerFindPaymentsById;
 	@Value("${customerFindByEmail}")
 	private String customerFindByEmail;
 	@Value("${customerUpdateCountService}")
@@ -175,16 +180,26 @@ public class Services {
 		}
 	}
 
+	
+	@SuppressWarnings("unused")
 	public Response validatePay(BookService bookService) throws JsonMappingException, JsonProcessingException {
 		Response response = new Response();
 		patternCard = Pattern.compile("[0-9]{16}");
 		matcherCard = patternCard.matcher(Long.toString(bookService.getCreditCard()));
+		
 		if (matcherCard.matches()) {
 			BookService bookServiceFound = repository.findBookServiceBybookNumber(bookService.getBookNumber());
-			if (bookServiceFound != null) {
-				bookServiceFound.setStatusPay("Paid");
-				response.setData(repository.save(bookServiceFound));
-				return response;
+			if (bookServiceFound != null) {	
+				List<Payment> listPaymentsFound = (List<Payment>) findCustomerPaymentsById(bookServiceFound.getIdCustomer()).getData();
+				Long findPayment = listPaymentsFound.parallelStream().filter(cardnumber -> cardnumber.getCardNumber().equals(bookService.getCreditCard())).count();
+				
+				if (findPayment > 0) {
+					bookServiceFound.setStatusPay("Paid");
+					response.setData(repository.save(bookServiceFound));
+					return response;
+				}else {
+					throw new ValidationException("Payment method doesn't saved");
+				}
 			} else {
 				throw new ValidationException("No bookService with that bookNumber");
 			}
@@ -215,6 +230,28 @@ public class Services {
 				throw new ValidationException("No bookService for that Customer");
 			}
 		} else {
+			throw new ValidationException("Id can't be null or zero");
+		}
+	}
+	
+	public Response findCustomerInfoById(Long id) throws JsonMappingException, JsonProcessingException {
+		Response response = new Response();
+		if (id != null && id > 0) {
+			Object infoFound = findCustomerInfo(id);
+			response.setData(infoFound);
+			return response;
+		}else {
+			throw new ValidationException("Id can't be null or zero");
+		}
+	}
+	
+	public Response findCustomerPaymentsById(Long id) throws JsonMappingException, JsonProcessingException {
+		Response response = new Response();
+		if (id != null && id > 0) {
+			List<Payment> listPaymentsFound = findCustomerPayments(id);
+			response.setData(listPaymentsFound);
+			return response;
+		}else {
 			throw new ValidationException("Id can't be null or zero");
 		}
 	}
@@ -255,54 +292,58 @@ public class Services {
 		
 	}
 
-	public Response update(BookService bookService, Long id, BindingResult validResultUpdate)
-			throws JsonProcessingException {
+	public Response update(BookService bookService, Long id, BindingResult validResultUpdate) throws JsonProcessingException {
 		Response response = new Response();
 		List<Employee> listEmployee;
-		boolean validation = validateData(bookService.getIdCustomer(), bookService.getCodeP(), bookService.getDate(),
-				bookService.getStarTime());
+		boolean validation = validateData(bookService.getIdCustomer(), bookService.getCodeP(), bookService.getDate(),bookService.getStarTime());
 		BookService bookSeviceFound = repository.findBookServiceById(id);
 		LocalDate dateBook = bookService.getDate();
 		LocalTime appointmentstartTime = bookService.getStarTime();
 		if (validation && !validResultUpdate.hasErrors()) {
-			if (bookSeviceFound != null) {
-				TypeService typeServiceFound = typeServiceFindByType(bookService.getTypeService());
-				LocalTime appoitmentEndTime = bookService.getStarTime().plusHours(typeServiceFound.getTimeSuggested());
-				boolean validateDateTime = validateLocalDateTime(dateBook, appointmentstartTime, appoitmentEndTime);
-				if (validateDateTime) {
-					try {
-						listEmployee = employeeFindByPostalCode(bookService.getCodeP());
-					} catch (JsonProcessingException e) {
-						log.error("error {}", e);
-						throw new ValidationException(e.getMessage());
-					}
+			List<BookService> listBookServiceByCustomer = repository.findBookServiceByIdCustomer(bookService.getIdCustomer());
+			Long count = listBookServiceByCustomer.parallelStream().filter(date -> date.getDate().equals(dateBook)).count();
+			if (bookSeviceFound != null && !bookSeviceFound.getStatusService().equals("done")) {
+				if (count == 0) {
+					TypeService typeServiceFound = typeServiceFindByType(bookService.getTypeService());
+					LocalTime appoitmentEndTime = bookService.getStarTime().plusHours(typeServiceFound.getTimeSuggested());
+					boolean validateDateTime = validateLocalDateTime(dateBook, appointmentstartTime, appoitmentEndTime);
+					if (validateDateTime) {
+						try {
+							listEmployee = employeeFindByPostalCode(bookService.getCodeP());
+						} catch (JsonProcessingException e) {
+							log.error("error {}", e);
+							throw new ValidationException(e.getMessage());
+						}
 
-					Optional<Employee> employeeValidation = validateAvaliable(listEmployee, dateBook,
-							appointmentstartTime, appoitmentEndTime);
+						Optional<Employee> employeeValidation = validateAvaliable(listEmployee, dateBook,
+								appointmentstartTime, appoitmentEndTime);
 
-					if (employeeValidation.isPresent()) {
-						Employee employee = employeeValidation.get();
-						bookSeviceFound.setCost(typeServiceFound.getCost());
-						bookSeviceFound = setValuesUpdateBookService(bookSeviceFound, bookService, employee,
-								appoitmentEndTime);
-						response.setData(repository.save(bookSeviceFound));
-						return response;
+						if (employeeValidation.isPresent()) {
+							Employee employee = employeeValidation.get();
+							bookSeviceFound.setCost(typeServiceFound.getCost());
+							bookSeviceFound = setValuesUpdateBookService(bookSeviceFound, bookService, employee,
+									appoitmentEndTime);
+							response.setData(repository.save(bookSeviceFound));
+							return response;
+
+						} else {
+							throw new ValidationException("No employees available");
+						}
 
 					} else {
-						throw new ValidationException("No employees available");
+						throw new ValidationException("Out of schedule");
 					}
 
 				} else {
-					throw new ValidationException("Out of schedule");
+					throw new ValidationException("Already have a book service for that day");
 				}
-
-			} else {
-				throw new ValidationException("No bookService for that ID");
+			}else {
+				throw new ValidationException("No bookService for that ID or is already done");
 			}
+		
 		} else {
 			throw new ValidationException("Some data is wrong");
 		}
-
 	}
 	
 	public Response updateStatusService(Long bookService, String status) {
@@ -519,6 +560,41 @@ public class Services {
 		Customer responseCustomer = objectMapper.readValue(stringResponse, Customer.class);
 		return responseCustomer;
 	}
+	
+	private Object findCustomerInfo(Long id) throws JsonMappingException, JsonProcessingException {
+		Response objectResponse = null;
+		try {
+			objectResponse = webClient.get().uri(customerFindInfoById + id).retrieve().bodyToMono(Response.class)
+					.block();
+		} catch (Exception e) {
+			throw new ValidationException("There isn't info for that customer ID");
+		}
+		Object objectCustomer = objectResponse.getData();
+		ObjectMapper objectMapper = new ObjectMapper();
+		String stringResponse = objectMapper.writeValueAsString(objectCustomer);
+		Object responseCustomer = objectMapper.readValue(stringResponse, Object.class);
+		return responseCustomer;
+	}
+	
+	private List<Payment> findCustomerPayments(Long id) throws JsonMappingException, JsonProcessingException {
+		Response objectResponse = null;
+		try {
+			objectResponse = webClient
+					.get()
+					.uri(customerFindPaymentsById + id)
+					.retrieve()
+					.bodyToMono(Response.class)
+					.block();
+		} catch (Exception e) {
+			throw new ValidationException("There isn't payments for that customer");
+		}
+		Object objectCustomer = objectResponse.getData();
+		ObjectMapper objectMapper = new ObjectMapper();
+		objectMapper.findAndRegisterModules();
+		String stringResponse = objectMapper.writeValueAsString(objectCustomer);
+		List<Payment> responseCustomer = objectMapper.readValue(stringResponse, new TypeReference<List<Payment>>() {});
+		return responseCustomer;
+	}
 
 	private TypeService typeServiceFindByType(String type) throws JsonProcessingException {
 		Response objectResponse = null;
@@ -596,5 +672,4 @@ public class Services {
 		Appointment responseAppointment = objectMapper.readValue(stringResponse, Appointment.class);
 		return responseAppointment;
 	}
-
 }

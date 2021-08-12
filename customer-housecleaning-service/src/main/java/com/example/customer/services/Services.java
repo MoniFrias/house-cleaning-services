@@ -43,7 +43,7 @@ public class Services {
 		Response response = new Response();
 		customer.setCountService(0L);
 		Customer customerFound = repository.findCustomerByEmail(customer.getEmail());
-		boolean matcherPhoneNumber = validatePhoneNumberAndEmail(customer.getPhoneNumber(), customer.getPostalCode(),customer.getEmail());
+		boolean matcherPhoneNumber = validatePhoneNumberAndEmail(customer.getPhoneNumber(), customer.getOutdoorNumber(), customer.getPostalCode(),customer.getEmail());
 		if (matcherPhoneNumber && !validResult.hasErrors()) {
 			if (customerFound == null) {
 				response.setData(repository.save(customer));
@@ -136,6 +136,36 @@ public class Services {
 				return response;
 			} else {
 				throw new ValidationException("No customers with that ID");
+			}
+		}else {
+			throw new ValidationException("Id can't be null or zero");
+		}
+	}
+	
+	public Response findInfoById(Long id) {
+		Response response = new Response();
+		if (id != null && id > 0) {
+			Object infoCustomer = repository.findInfoByIdCustomer(id);
+			if (infoCustomer != null) {
+				response.setData(infoCustomer);
+				return response;
+			}else {
+				throw new ValidationException("No customers with that ID");
+			}
+		}else {
+			throw new ValidationException("Id can't be null or zero");
+		}
+	}
+	
+	public Response findPaymentsById(Long id) {
+		Response response = new Response();
+		if (id != null && id > 0) {
+			List<Payment> paymentsFound = repositoryPayment.findPaymentByIdCustomer(id);
+			if (!paymentsFound.isEmpty()) {
+				response.setData(paymentsFound);
+				return response;
+			}else {
+				throw new ValidationException("No payments saved");
 			}
 		}else {
 			throw new ValidationException("Id can't be null or zero");
@@ -263,7 +293,7 @@ public class Services {
 		customer.setCountService(0L);
 		Customer customerFound = repository.findCustomerById(id);
 		Customer customerFoundByEmail = repository.findCustomerByEmail(customer.getEmail()); 
-		boolean matcherPhoneNumber = validatePhoneNumberAndEmail(customer.getPhoneNumber(), customer.getPostalCode(),customer.getEmail());
+		boolean matcherPhoneNumber = validatePhoneNumberAndEmail(customer.getPhoneNumber(), customer.getOutdoorNumber() , customer.getPostalCode(),customer.getEmail());
 		if (id != null && id > 0) {
 			if (matcherPhoneNumber && !validResultUpdate.hasErrors()) {
 				if (customerFoundByEmail == null) {
@@ -325,12 +355,14 @@ public class Services {
 		}
 	}
 
-	private boolean validatePhoneNumberAndEmail(Long phoneNumber, Long codeP, String email) {
+	private boolean validatePhoneNumberAndEmail(Long phoneNumber, Long outdoorNumber, Long codeP, String email) {
 		patternPhone = Pattern.compile("[0-9]{10}");
 		matcherPhone = patternPhone.matcher(Long.toString(phoneNumber));
 		patternCodeP = Pattern.compile("[0-9]{5}");
 		matcherCodeP = patternCodeP.matcher(Long.toString(codeP));
-		if (matcherPhone.matches() && matcherCodeP.matches() && email.contains(".com")) {
+		pattern = Pattern.compile("[0-9]{1,5}");
+		matcher = pattern.matcher(Long.toString(outdoorNumber));
+		if (matcherPhone.matches() && matcherCodeP.matches() && matcher.matches() && email.contains(".com")) {
 			return true;
 		} else {
 			return false;
@@ -367,6 +399,10 @@ public class Services {
 		List<BookService> responseBookService = objectMapper.readValue(stringResponse, new TypeReference<List<BookService>>() {});
 		return responseBookService;
 	}
+
+	
+
+	
 
 
 }

@@ -59,6 +59,10 @@ public class Customer {
 	private String address;
 	
 	@NotNull
+	@Column(name = "outdoorNumber")
+	private Long outdoorNumber;
+	
+	@NotNull
 	@Column(name = "phoneNumber")
 	private Long phoneNumber;
 	

@@ -18,6 +18,7 @@ public class Customer {
 	private String state;
 	private Long postalCode;
 	private String address;
+	private Long outdoorNumber;
 	private Long phoneNumber;
 	private Long countService;
 	private List<Payment> listPayment;

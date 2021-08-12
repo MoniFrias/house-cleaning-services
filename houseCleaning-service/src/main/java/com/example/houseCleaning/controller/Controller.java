@@ -87,6 +87,18 @@ public class Controller extends ResourceServerConfigurerAdapter{
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 	
+	@GetMapping(path = "/findCustomerInfoById")
+	public ResponseEntity<Response> findCustomerInfoById(@RequestParam(name = "id") Long id) throws JsonMappingException, JsonProcessingException{
+		Response response = services.findCustomerInfoById(id);
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+	
+	@GetMapping(path = "/findCustomerPaymentsById")
+	public ResponseEntity<Response> findCustomerPaymentsById(@RequestParam(name = "id") Long id) throws JsonMappingException, JsonProcessingException{
+		Response response = services.findCustomerPaymentsById(id);
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+	
 	@GetMapping(path = "/findByBookNumber")
 	public ResponseEntity<Response> findByBookNumber(@RequestParam(name = "number") Long number){
 		Response response = services.findByBookNumber(number);

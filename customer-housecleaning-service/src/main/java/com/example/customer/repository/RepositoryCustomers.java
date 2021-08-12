@@ -25,6 +25,7 @@ public interface RepositoryCustomers extends JpaRepository<Customer, Long>{
 	@Query(nativeQuery = true, value = "SELECT id,name,state FROM Customer WHERE state =:state")
 	List<Object> findCustomerByStates(String state);
 	
-	
+	@Query(nativeQuery = true, value = "SELECT id,name,email,state,address FROM Customer WHERE id =:id")
+	Object findInfoByIdCustomer(Long id);
 
 }
