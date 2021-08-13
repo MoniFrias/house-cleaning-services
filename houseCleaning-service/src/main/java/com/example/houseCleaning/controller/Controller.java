@@ -117,7 +117,7 @@ public class Controller extends ResourceServerConfigurerAdapter{
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 	
-	@GetMapping(path = "/updateStatusService")
+	@PutMapping(path = "/updateStatusService")
 	public ResponseEntity<Response> updateStatusService(@RequestParam(name = "bookService") Long bookService, @RequestParam(name = "status") String status){
 		Response response = services.updateStatusService(bookService,status);
 		return new ResponseEntity<>(response, HttpStatus.OK);

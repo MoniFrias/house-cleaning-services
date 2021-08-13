@@ -294,6 +294,19 @@ public class Services {
 			throw new ValidationException("Some values are wrong");
 		}
 	}
+	
+	
+	public Response updateStatusAppointment(Long id, String statusAppoin) {
+		Response response = new Response();
+		Appointment appointmentFound = repositoryAppointment.findAppointmentById(id);
+		if (appointmentFound != null) {
+			appointmentFound.setStatusService(statusAppoin);
+			response.setData(repositoryAppointment.save(appointmentFound));
+			return response;
+		}else {
+			throw new ValidationException("No Appointment with that ID");
+		}
+	}
 
 	public Response deleteById(Long id) {
 		Response response = new Response();
@@ -423,6 +436,7 @@ public class Services {
 		return number;
 	}
 
+	
 	
 	
 	
