@@ -56,7 +56,7 @@ public class Services {
 		}
 	}
 	
-	public static String formatCardNumber(String cardNumber){        
+	private static String formatCardNumber(String cardNumber){        
         StringBuilder sbMaskString = new StringBuilder(12);        
         for(int i = 0; i < 12; i++){        
         	sbMaskString.append('*');
@@ -69,14 +69,10 @@ public class Services {
 		Response response = new Response();
 		pattern = Pattern.compile("[0-9]{16}");
 		matcher = pattern.matcher(Long.toString(payment.getCardNumber()));
-	    Customer customerFound;			
+	   		
 		if (payment.getIdCustomer() != null && payment.getIdCustomer() > 0) {
-			if (matcher.matches() && !validResultPayment.hasErrors()) {
-				try {
-					customerFound = (Customer) findById(payment.getIdCustomer()).getData();
-				} catch (JsonProcessingException e) {
-					throw new ValidationException("No customers with that ID");
-				}
+			if (matcher.matches() && !validResultPayment.hasErrors()) {				
+				 Customer customerFound = repository.findCustomerById(payment.getIdCustomer());
 				if (customerFound != null) {
 					Payment paymentFound = repositoryPayment.findPaymentByIdCustomerAndCardNumber(payment.getIdCustomer(),payment.getCardNumber());
 					if (paymentFound==null) {
@@ -96,17 +92,6 @@ public class Services {
 		}else {
 			throw new ValidationException("Id Customer can't be null or zero");
 		}		
-	}
-	
-	private Customer setPaymentsMethods(Customer customer){
-		List<Payment> listPaymenteFound =  repositoryPayment.findPaymentByIdCustomer(customer.getId());
-		if (listPaymenteFound.isEmpty()) {
-			customer.setListPayment(new ArrayList<>());
-			return customer;
-		}else {
-			customer.setListPayment(listPaymenteFound);
-			return customer;
-		}
 	}
 
 	public Response findAll() {
@@ -366,6 +351,17 @@ public class Services {
 			return true;
 		} else {
 			return false;
+		}
+	}
+	
+	private Customer setPaymentsMethods(Customer customer){
+		List<Payment> listPaymenteFound =  repositoryPayment.findPaymentByIdCustomer(customer.getId());
+		if (listPaymenteFound.isEmpty()) {
+			customer.setListPayment(new ArrayList<>());
+			return customer;
+		}else {
+			customer.setListPayment(listPaymenteFound);
+			return customer;
 		}
 	}
 	
