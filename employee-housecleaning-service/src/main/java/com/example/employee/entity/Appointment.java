@@ -54,6 +54,9 @@ public class Appointment {
 	@Column(name = "endTime")
 	private LocalTime endTime;
 	
+	@Column(name = "statusPay")
+	private String statusPay;
+	
 	@Column(name = "statusService")
 	private String statusService;
 

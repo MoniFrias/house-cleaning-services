@@ -9,15 +9,12 @@ import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-
 import javax.validation.Valid;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.reactive.function.client.WebClient;
-
 import com.example.employee.entity.Appointment;
 import com.example.employee.entity.Employee;
 import com.example.employee.entity.Response;
@@ -66,7 +63,7 @@ public class Services {
 		LocalTime AppointmentStarTime = appointment.getStarTime();
 		
 		List<Employee> listEmployee = repository.findEmployeeByPostalCode(appointment.getPostalCode());
-		if (appointment.getId() == null) {
+		if (appointment.getId() == null && appointment.getBookNumber() == null) {
 			if (validationAppointment && !validResultApp.hasErrors()) {
 				if (!listEmployee.isEmpty()) {
 					TypeService typeServiceFound = typeServiceFindByType(appointment.getTypeService());			
@@ -102,8 +99,6 @@ public class Services {
 		}
 	}	
 	
-	
-
 	public Response findAll() {
 		Response response = new Response();
 		List<Employee> listEmployee = repository.findAll();
@@ -263,7 +258,7 @@ public class Services {
 		
 		List<Employee> listEmployee = repository.findEmployeeByPostalCode(appointment.getPostalCode());
 		if (validationAppointment && !validResultApp.hasErrors()) {
-			if (!listEmployee.isEmpty() && appointmentFound != null) {
+			if (!listEmployee.isEmpty() && appointmentFound != null && !appointmentFound.getStatusService().equals("done")) {
 				TypeService typeServiceFound = typeServiceFindByType(appointment.getTypeService());			
 				LocalTime appoitmentEndTime = appointment.getStarTime().plusHours(typeServiceFound.getTimeSuggested());
 				boolean validateDateTime = validateLocalDateTime(dateBook, AppointmentStarTime, appoitmentEndTime);
@@ -295,16 +290,28 @@ public class Services {
 		}
 	}
 	
-	
-	public Response updateStatusAppointment(Long id, String statusAppoin) {
+
+	public Response updateStatusPayment(Long bookService, String status) {
 		Response response = new Response();
-		Appointment appointmentFound = repositoryAppointment.findAppointmentById(id);
-		if (appointmentFound != null) {
+		Appointment appointmentFound = repositoryAppointment.findAppointmentByBookNumber(bookService);
+		if (appointmentFound != null && appointmentFound.getStatusPay() != "Paid") {
+			appointmentFound.setStatusPay(status);
+			response.setData(repositoryAppointment.save(appointmentFound));
+			return response;
+		}else {
+			throw new ValidationException("No Appointment with that bookService or is already paid");
+		}
+	}
+	
+	public Response updateStatusAppointment(Long bookService, String statusAppoin) {
+		Response response = new Response();
+		Appointment appointmentFound = repositoryAppointment.findAppointmentByBookNumber(bookService);
+		if (appointmentFound != null && appointmentFound.getStatusPay() == "Paid") {
 			appointmentFound.setStatusService(statusAppoin);
 			response.setData(repositoryAppointment.save(appointmentFound));
 			return response;
 		}else {
-			throw new ValidationException("No Appointment with that ID");
+			throw new ValidationException("No Appointment with that bookService");
 		}
 	}
 
@@ -435,6 +442,9 @@ public class Services {
 				+ String.valueOf(appointment.getIdCustomer()));
 		return number;
 	}
+
+
+	
 
 	
 	

@@ -24,5 +24,6 @@ public class Appointment{
 	private LocalDate date;
 	private LocalTime starTime;
 	private LocalTime endTime;
+	private String statusPay;
 	private String statusService;
 }

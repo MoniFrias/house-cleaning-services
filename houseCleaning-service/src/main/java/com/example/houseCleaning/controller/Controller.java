@@ -69,9 +69,9 @@ public class Controller extends ResourceServerConfigurerAdapter{
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 	
-	@PostMapping(path = "/validatePay")
-	public ResponseEntity<Response> validatePay(@RequestBody BookService bookService) throws JsonMappingException, JsonProcessingException {
-		Response response = services.validatePay(bookService);
+	@GetMapping(path = "/validatePay")
+	public ResponseEntity<Response> validatePay(@RequestParam(name = "bookService") Long bookService, @RequestParam(name = "creditCard")Long creditCard) throws JsonMappingException, JsonProcessingException {
+		Response response = services.validatePay(bookService,creditCard);
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 	
@@ -118,7 +118,7 @@ public class Controller extends ResourceServerConfigurerAdapter{
 	}
 	
 	@PutMapping(path = "/updateStatusService")
-	public ResponseEntity<Response> updateStatusService(@RequestParam(name = "bookService") Long bookService, @RequestParam(name = "status") String status){
+	public ResponseEntity<Response> updateStatusService(@RequestParam(name = "bookService") Long bookService, @RequestParam(name = "status") String status) throws JsonMappingException, JsonProcessingException{
 		Response response = services.updateStatusService(bookService,status);
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}

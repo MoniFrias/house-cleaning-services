@@ -58,6 +58,8 @@ public class Services {
 	private String employeeSaveAppointment;
 	@Value("${employeeUpdateAppointment}")
 	private String employeeUpdateAppointment;
+	@Value("${employeeUpdatePaymentAppointment}")
+	private String employeeUpdatePaymentAppointment;
 	@Value("${employeeFindByBookNumber}")
 	private String employeeFindByBookNumber;
 	@Value("${typeServiceFindByType}")
@@ -182,20 +184,22 @@ public class Services {
 
 	
 	@SuppressWarnings("unused")
-	public Response validatePay(BookService bookService) throws JsonMappingException, JsonProcessingException {
+	public Response validatePay(Long bookService, Long creditCard) throws JsonMappingException, JsonProcessingException {
 		Response response = new Response();
 		patternCard = Pattern.compile("[0-9]{16}");
-		matcherCard = patternCard.matcher(Long.toString(bookService.getCreditCard()));
+		matcherCard = patternCard.matcher(Long.toString(creditCard));
 		
 		if (matcherCard.matches()) {
-			BookService bookServiceFound = repository.findBookServiceBybookNumber(bookService.getBookNumber());
+			BookService bookServiceFound = repository.findBookServiceBybookNumber(bookService);
 			if (bookServiceFound != null) {	
 				List<Payment> listPaymentsFound = (List<Payment>) findCustomerPaymentsById(bookServiceFound.getIdCustomer()).getData();
-				Long findPayment = listPaymentsFound.parallelStream().filter(cardnumber -> cardnumber.getCardNumber().equals(bookService.getCreditCard())).count();
+				Long findPayment = listPaymentsFound.parallelStream().filter(cardnumber -> cardnumber.getCardNumber().equals(creditCard)).count();
 				
 				if (findPayment > 0) {
 					bookServiceFound.setStatusPay("Paid");
-					response.setData(repository.save(bookServiceFound));
+					response.setData(repository.save(bookServiceFound));					
+					//Appointment appointmentFound = appointmentFindByBookNumber(bookServiceFound.getBookNumber());	
+				    updatePaymentAppointment(bookService,"Paid");
 					return response;
 				}else {
 					throw new ValidationException("Payment method doesn't saved");
@@ -302,7 +306,7 @@ public class Services {
 		if (validation && !validResultUpdate.hasErrors()) {
 			List<BookService> listBookServiceByCustomer = repository.findBookServiceByIdCustomer(bookService.getIdCustomer());
 			Long count = listBookServiceByCustomer.parallelStream().filter(date -> date.getDate().equals(dateBook)).count();
-			if (bookSeviceFound != null && !bookSeviceFound.getStatusService().equals("done")) {
+			if (bookSeviceFound != null && !bookSeviceFound.getStatusService().equals("Done")) {
 				if (count == 0) {
 					TypeService typeServiceFound = typeServiceFindByType(bookService.getTypeService());
 					LocalTime appoitmentEndTime = bookService.getStarTime().plusHours(typeServiceFound.getTimeSuggested());
@@ -346,17 +350,18 @@ public class Services {
 		}
 	}
 	
-	public Response updateStatusService(Long bookService, String status) {
+	public Response updateStatusService(Long bookService, String status) throws JsonMappingException, JsonProcessingException {
 		Response response = new Response();
 		BookService bookSeviceFound = repository.findBookServiceBybookNumber(bookService);
 		boolean validationNumber = validateBookNumber(bookService);
 		if (validationNumber) {
-			if (bookSeviceFound != null) {
+			if (bookSeviceFound != null && bookSeviceFound.getStatusPay() == "Paid" && !bookSeviceFound.getStatusService().equals("Done")) {
 				bookSeviceFound.setStatusService(status);
-				response.setData(repository.save(bookSeviceFound));
+				response.setData(repository.save(bookSeviceFound));					
+				updateStatusServiceAppointment(bookService, status);
 				return response;
 			} else {
-				throw new ValidationException("No bookService for that bookNumber");
+				throw new ValidationException("No bookService for that bookNumber or isn't paid yet");
 			}
 		} else {
 			throw new ValidationException("Some data is wrong");
@@ -391,12 +396,14 @@ public class Services {
 				+ String.valueOf(bookService.getIdCustomer()));
 		bookService.setIdEmployee(employee.getId());
 		bookService.setStatusPay("In process");
+		bookService.setStatusService("Pendient");
 		bookService.setEndTime(appoitmentEndTime);
 		bookService.setBookNumber(number);
 		Appointment appoitmentValues = new Appointment();
 		appoitmentValues = setValuesAppointment(appoitmentValues, bookService);
 		appoitmentValues.setEndTime(appoitmentEndTime);
 		appoitmentValues.setBookNumber(number);
+		appoitmentValues.setStatusPay("In process");
 		employeeSaveAppointment(appoitmentValues);
 		return bookService;
 	}
@@ -644,6 +651,26 @@ public class Services {
 			throw new ValidationException("Something is wrong");
 		}
 	}
+	
+	private void updatePaymentAppointment(Long bookService, String status) {
+		MediaType contentType = null;
+		try {
+			webClient.put().uri(employeeUpdatePaymentAppointment, uri -> uri.queryParam("bookService", bookService).queryParam("status", status).build())
+			.retrieve().bodyToMono(Response.class).block();
+		} catch (Exception e) {
+			throw new ValidationException("Something is wrong to update Payment");
+		}
+	}
+	
+	private void updateStatusServiceAppointment(Long bookService, String status) {
+		MediaType contentType = null;
+		try {
+			webClient.put().uri(employeeUpdatePaymentAppointment, uri -> uri.queryParam("bookService", bookService).queryParam("status", status).build())
+			.retrieve().bodyToMono(Response.class).block();
+		} catch (Exception e) {
+			throw new ValidationException("Something is wrong to update status Services");
+		}
+	}
 
 	private void employeeUpdateAppointment(Appointment appointment) {
 		MediaType contentType = null;
@@ -651,7 +678,7 @@ public class Services {
 			webClient.put().uri(employeeUpdateAppointment).contentType(contentType.APPLICATION_JSON)
 					.body(BodyInserters.fromValue(appointment)).retrieve().bodyToMono(Response.class).block();
 		} catch (Exception e) {
-			throw new ValidationException("Something is wrong");
+			throw new ValidationException("Something is wrong to update Appointment");
 		}
 	}
 

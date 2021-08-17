@@ -16,12 +16,12 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
 import com.example.employee.entity.Appointment;
 import com.example.employee.entity.Employee;
 import com.example.employee.entity.Response;
 import com.example.employee.services.Services;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 
 @RestController
 @RequestMapping(path = "/employee")
@@ -41,7 +41,7 @@ public class Controller {
 		Response response = services.saveAppointment(appointment, validResultApp);
 		return new ResponseEntity<>(response,HttpStatus.OK);
 	}
-	
+		
 	@GetMapping(path = "/findAll")
 	public ResponseEntity<Response> findAll(){
 		Response response = services.findAll();
@@ -96,9 +96,15 @@ public class Controller {
 		return new ResponseEntity<>(response,HttpStatus.OK);
 	}
 	
-	@PutMapping(path = "/updateStatusAppointment/{id}")
-	public ResponseEntity<Response> updateStatusAppointment(@PathVariable(name = "id") Long id, @RequestParam(name = "status") String statusAppoin) throws JsonProcessingException{
-		Response response = services.updateStatusAppointment(id, statusAppoin);
+	@PutMapping(path = "/updateStatusPayment")
+	public ResponseEntity<Response> updateStatusPayment(@RequestParam(name = "bookService") Long bookService, @RequestParam(name = "status")String status) {
+		Response response = services.updateStatusPayment(bookService, status);
+		return new ResponseEntity<>(response,HttpStatus.OK);
+	}
+	
+	@PutMapping(path = "/updateStatusAppointment")
+	public ResponseEntity<Response> updateStatusAppointment(@RequestParam(name = "bookService") Long bookService, @RequestParam(name = "status") String status) {
+		Response response = services.updateStatusAppointment(bookService, status);
 		return new ResponseEntity<>(response,HttpStatus.OK);
 	}
 	

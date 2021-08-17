@@ -61,9 +61,6 @@ public class BookService {
 	@Column(name = "STATUS_PAY")
 	private String statusPay;
 	
-	@Column(name = "CREDIT_CARD")
-	private Long creditCard;
-	
 	@Column(name = "STATUS_SERVICE")
 	private String statusService;
 
