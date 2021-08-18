@@ -308,7 +308,7 @@ public class Services {
 	public Response updateCountService(Long id, Long count) {
 		Response response = new Response();
 		Customer customerFound = repository.findCustomerById(id);
-		if (id != null && id > 0) {
+		if (id != null && id > 0 && count != null && count > 0) {
 			if (customerFound != null) {
 				customerFound.setCountService(count);
 				response.setData(repository.save(customerFound));
@@ -317,7 +317,7 @@ public class Services {
 				throw new ValidationException("No customer with that Id");
 			}
 		} else {
-			throw new ValidationException("Id can't be null or zero");
+			throw new ValidationException("Id and count can't be null or zero");
 		}
 	}
 
