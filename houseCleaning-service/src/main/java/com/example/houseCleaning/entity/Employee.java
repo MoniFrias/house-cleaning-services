@@ -20,7 +20,7 @@ public class Employee{
 	private String email;
 	private String city;
 	private String state;
-	private String postalCode;
+	private Long postalCode;
 	private Long phoneNumber;
 	private List<Appointment> appointments;
 }

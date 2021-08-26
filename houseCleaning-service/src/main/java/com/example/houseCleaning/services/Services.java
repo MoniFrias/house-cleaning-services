@@ -129,7 +129,6 @@ public class Services {
 		LocalTime appointmentstartTime = bookService.getStarTime();
 		boolean validationResult = validateData(bookService.getIdCustomer(), bookService.getCodeP(), dateBook,
 				appointmentstartTime);
-		Customer customerStatus = customerFindById(bookService.getIdCustomer());
 		if (validationResult && !bindingResult.hasErrors()) {
 			TypeService typeServiceFound = typeServiceFindByType(bookService.getTypeService());
 			LocalTime appoitmentEndTime = bookService.getStarTime().plusHours(typeServiceFound.getTimeSuggested());
@@ -150,7 +149,7 @@ public class Services {
 				if (count == 0) {					
 					if (employeeValidation.isPresent()) {
 						Employee employee = employeeValidation.get();
-
+						Customer customerStatus = customerFindById(bookService.getIdCustomer());
 						if (customerStatus.getCountService() == 0) {
 							double descount = typeServiceFound.getCost() * (0.2);
 							Long costTotal = typeServiceFound.getCost() - (new Double(descount)).longValue();
