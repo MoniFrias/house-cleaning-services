@@ -167,9 +167,7 @@ class ServicesTest {
 		when(webClient.get()).thenReturn(requestHeaderUriSpec);
 		when(requestHeaderUriSpec.uri(Mockito.anyString())).thenReturn(requestHeaderSpec);
 		when(requestHeaderSpec.retrieve()).thenReturn(responseSpec);
-		TypeService typeService = new TypeService(1L, "House", 500L, 5L);
-		Mono<Response> monoResponse = Mono.just(new Response(true, "", typeService));
-		when(responseSpec.bodyToMono(Response.class)).thenReturn(monoResponse);
+		when(responseSpec.bodyToMono(Response.class)).thenReturn(null);
 		assertThrows(ValidationException.class, () -> services.saveAppointment(appointment, validResultApp));
 	}
 	

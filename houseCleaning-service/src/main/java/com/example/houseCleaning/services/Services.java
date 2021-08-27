@@ -1,6 +1,8 @@
 package com.example.houseCleaning.services;
 
+import java.sql.Timestamp;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Objects;
@@ -383,25 +385,18 @@ public class Services {
 		}
 	}
 
-	private BookService setValuesBookService(BookService bookService, Employee employee, LocalTime appoitmentEndTime) {
-		int month = LocalDate.now().getMonthValue();
-		int year = LocalDate.now().getYear();
-		int day = LocalDate.now().getDayOfMonth();
-		int hour = LocalTime.now().getHour();
-		int minute = LocalTime.now().getMinute();
-		int second = LocalTime.now().getSecond();
-		Long number = Long.valueOf(String.valueOf(year) + String.valueOf(month) + String.valueOf(day)
-				+ String.valueOf(hour) + String.valueOf(minute) + String.valueOf(second)
-				+ String.valueOf(bookService.getIdCustomer()));
+	private BookService setValuesBookService(BookService bookService, Employee employee, LocalTime appoitmentEndTime) {		
+		Timestamp ts = Timestamp.valueOf(LocalDateTime.now());
+		
 		bookService.setIdEmployee(employee.getId());
 		bookService.setStatusPay("In process");
 		bookService.setStatusService("Pendient");
 		bookService.setEndTime(appoitmentEndTime);
-		bookService.setBookNumber(number);
+		bookService.setBookNumber(ts.getTime());
 		Appointment appoitmentValues = new Appointment();
 		appoitmentValues = setValuesAppointment(appoitmentValues, bookService);
 		appoitmentValues.setEndTime(appoitmentEndTime);
-		appoitmentValues.setBookNumber(number);
+		appoitmentValues.setBookNumber(ts.getTime());
 		appoitmentValues.setStatusPay("In process");
 		employeeSaveAppointment(appoitmentValues);
 		return bookService;

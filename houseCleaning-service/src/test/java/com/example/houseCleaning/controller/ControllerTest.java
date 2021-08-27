@@ -1,16 +1,24 @@
 package com.example.houseCleaning.controller;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import javax.validation.Valid;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.BindingResult;
 
@@ -18,11 +26,14 @@ import com.example.houseCleaning.entity.BookService;
 import com.example.houseCleaning.entity.Customer;
 import com.example.houseCleaning.entity.Employee;
 import com.example.houseCleaning.entity.TypeService;
+import com.example.houseCleaning.oauth.WebSecurityConfiguration;
 import com.example.houseCleaning.services.Services;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 
 @ExtendWith(MockitoExtension.class)
+@RunWith(SpringRunner.class)
+@WebMvcTest(WebSecurityConfiguration.class)
 class ControllerTest {
 
 	@InjectMocks
@@ -114,11 +125,15 @@ class ControllerTest {
 		assertEquals(HttpStatus.OK, controller.deleteByBookNumber(111L).getStatusCode());
 	}
 	
-	@Test
-	void configureTest() {
-		HttpSecurity http;
-		
-	}
+	@Autowired
+    private MockMvc mvc;
+
+	
+    @Test
+    public void givenAuthRequestOnPrivateService_shouldSucceedWith200() throws Exception {
+        mvc.perform(get("/houseCleaning/login").contentType(MediaType.APPLICATION_JSON))
+          .andExpect(status().isOk());
+    }
 	
 	
 }

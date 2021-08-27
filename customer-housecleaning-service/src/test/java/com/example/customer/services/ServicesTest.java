@@ -243,8 +243,6 @@ class ServicesTest {
 		when(webClient.get()).thenReturn(requestHeaderUriSpec);
 		when(requestHeaderUriSpec.uri(Mockito.anyString(),Mockito.anyLong())).thenReturn(requestHeaderSpec);
 		when(requestHeaderSpec.retrieve()).thenReturn(responseSpec);
-//		List<BookService> listBookService = new ArrayList<>();
-//		listBookService.add(new BookService(1L, 20218161439591L, 1L, 1L, 12345L, "House", LocalDate.now().plusDays(1), LocalTime.now(), LocalTime.now().plusHours(3), 500L, "Pendient", 1234567890123457L));
 		Mono<Response> monoResponse=Mono.just(new Response(true, "msg", true));//value wrong
 		when(responseSpec.bodyToMono(Response.class)).thenReturn(monoResponse);
 		assertThrows(ValidationException.class, () -> services.findBookServiceByIdCustomer(1L));
@@ -255,10 +253,12 @@ class ServicesTest {
 	void findBookServiceByIdCustomerTest() throws JsonProcessingException {
 		Customer customer = new Customer(1L, "firstName", "lastName", "email@gma.com", "Monterrey", "NLL", 12345L , "address9", 555L, 1234567894L, 0L, new ArrayList<>(), new ArrayList<>());
 		List<Payment> listPayment = new ArrayList<>();
+		listPayment.add(new Payment(1L, 1L, "cardType", 1234567890123457L));
 		when(repositoryCustomer.findCustomerById(Mockito.anyLong())).thenReturn(customer);
 		when(repositoryPayment.findPaymentByIdCustomer(Mockito.anyLong())).thenReturn(listPayment);
+		
 		when(webClient.get()).thenReturn(requestHeaderUriSpec);
-		when(requestHeaderUriSpec.uri(Mockito.anyString(),Mockito.anyLong())).thenReturn(requestHeaderSpec);
+		when(requestHeaderUriSpec.uri(Mockito.anyString())).thenReturn(requestHeaderSpec);
 		when(requestHeaderSpec.retrieve()).thenReturn(responseSpec);
 		List<BookService> listBookService = new ArrayList<>();
 		listBookService.add(new BookService(1L, 20218161439591L, 1L, 1L, 12345L, "House", LocalDate.now().plusDays(1), LocalTime.now(), LocalTime.now().plusHours(3), 500L, "Pendient", 1234567890123457L));
@@ -480,8 +480,11 @@ class ServicesTest {
 	
 	@Test 
 	void deleteByIdCustomerFoundTest() {
-		Customer customer = new Customer();
+		Customer customer = new Customer(1L, "firstName", "lastName", "email@gma.com", "Monterrey", "NLL", 12345L , "address9", 555L, 1234567894L, 0L, new ArrayList<>(), new ArrayList<>());
 		when(repositoryCustomer.findCustomerById(Mockito.anyLong())).thenReturn(customer);
+		List<Payment> listPayment = new ArrayList<>();
+		listPayment.add(new Payment(1L, 1L, "cardType", 1234567890123457L));
+		when(repositoryPayment.findPaymentByIdCustomer(Mockito.anyLong())).thenReturn(listPayment);
 		assertTrue(services.deleteById(1L).isResult());
 	}
 	
